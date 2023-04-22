@@ -157,10 +157,10 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             print(float(event2["MAGNITUDE_HER"][1:]))
             
             mag1 = float(event1["MAGNITUDE_NOAA"][1:])
-            class1 = event1["MAGNITUDE_NOAA"][0]
+            class1 = event1["MAGNITUDE_NOAA"][0] if type(event1["MAGNITUDE_NOAA"][0]) == "" else 100 
             
             mag2 = float(event2["MAGNITUDE_HER"][1:])
-            class2 = event2["MAGNITUDE_HER"][0]
+            class2 = event2["MAGNITUDE_NOAA"][0] if type(event2["MAGNITUDE_NOAA"][0]) == "" else 2100 
             if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and class1==class2 and abs(mag1-mag2)<0.2):
                 match = True
                 newevent = event2
