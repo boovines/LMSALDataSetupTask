@@ -153,14 +153,19 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
         match = False
         for event2 in list2:
             # print(event1)
-            print(event2["MAGNITUDE_HER"][1:])
-            print(float(event2["MAGNITUDE_HER"][1:]))
+            # print(event2["MAGNITUDE_HER"][1:])
             
-            mag1 = float(event1["MAGNITUDE_NOAA"][1:])
-            class1 = event1["MAGNITUDE_NOAA"][0] if type(event1["MAGNITUDE_NOAA"][0]) == "" else 100 # maybe this is wrong? "MAGNITUDE"
+            # print("Hi", event1)
+            # print("hi", event2)
+            # print(event2["MAGNITUDE_HER"])
+            # print(event2["MAGNITUDE_HER"][0])
+            # print("hola", type(event2["MAGNITUDE_HER"][0]),event2["MAGNITUDE_HER"][0])
             
-            mag2 = float(event2["MAGNITUDE_HER"][1:])
-            class2 = event2["MAGNITUDE_NOAA"][0] if type(event2["MAGNITUDE_NOAA"][0]) == "" else 2100 # maybe this is wrong?
+            mag1 = float(event1["MAGNITUDE_NOAA"][1:]) if event1["MAGNITUDE_NOAA"] != "" else 2100
+            class1 = event1["MAGNITUDE_NOAA"][0] if event1["MAGNITUDE_NOAA"] != "" else 100 # maybe this is wrong? "MAGNITUDE"
+            
+            mag2 = float(event2["MAGNITUDE_HER"][1:]) if event2["MAGNITUDE_HER"] != "" else 2100
+            class2 = event2["MAGNITUDE_HER"][0] if event2["MAGNITUDE_HER"] != "" else 2100 # maybe this is wrong?
             if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and class1==class2 and abs(mag1-mag2)<0.2):
                 match = True
                 newevent = event1
@@ -172,6 +177,10 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
                 newevent["LOCATION_NOAA"] = event1["LOCATION_NOAA"]
                 newevent["MAGNITUDE_HER"] = event2["MAGNITUDE_HER"]
                 newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"] # also remove newevent["LOCATION/MAGNITUDE"]
+                
+                # print(event1["LOCATION_NOAA"], event1["MAGNITUDE_NOAA"])
+                # print(event2["LOCATION_HER"], event2["MAGNITUDE_HER"])
+                # print(newevent)
                 # print("type1")
                 # print(event1)
                 # print(event2)
@@ -205,7 +214,13 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
         match2 = False
         # print(event1)
         for event1 in list1:
-            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"]):
+            mag1 = float(event1["MAGNITUDE_NOAA"][1:]) if event1["MAGNITUDE_NOAA"] != "" else 2100
+            class1 = event1["MAGNITUDE_NOAA"][0] if event1["MAGNITUDE_NOAA"] != "" else 100 # maybe this is wrong? "MAGNITUDE"
+            
+            mag2 = float(event2["MAGNITUDE_HER"][1:]) if event2["MAGNITUDE_HER"] != "" else 2100
+            class2 = event2["MAGNITUDE_HER"][0] if event2["MAGNITUDE_HER"] != "" else 2100 # maybe this is wrong?
+            
+            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and abs(mag1-mag2)<0.2):
                 match2 = True
                 break
         if not match2:
@@ -220,7 +235,13 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             newlist.append(newevent) #4
     return newlist
 
-
+def getDFs(evlist):
+    dfs = []
+    for ev in evlist:
+        dfs.append(pd.DataFrame(ev, index = [0]))
+    return pd.concat(dfs)
+def sortList(l):
+    return sorted(l, key=lambda x: x['DATE'])
 def makeFinalList(splitByYear=False, year=''):
     if splitByYear:
         # temp1 = getEventData('old-goes-xrs-reports', str(year))
@@ -254,6 +275,16 @@ def makeFinalList(splitByYear=False, year=''):
         
         noaa = [item for years in reports[0] for item in years]
         her = [item for years in reports[1] for item in years]
+        print(noaa)
+        print(len(noaa), len(her))
+        
+        snoaa = sortList(noaa)
+        noaaDF = getDFs(snoaa)
+        noaaDF.to_csv("noaaevs0519.csv")
+        
+        sher = sortList(her)
+        herDF = getDFs(sher)
+        herDF.to_csv("herevs0519.csv")
         twolistsmerged = mergeLists(noaa, her)
         
         # newlist = mergeLists(twolistsmerged, reports[2])
@@ -267,11 +298,7 @@ noaa, her, merged = makeFinalList()
 # herline1 = pd.DataFrame(her[0])
 # mergedline1 = pd.DataFrame(merged[0])
 
-def getDFs(evlist):
-    dfs = []
-    for ev in evlist:
-        dfs.append(pd.DataFrame(ev, index = [0]))
-    return pd.concat(dfs)
+
     
     # if len(evlist) == 0:
     #     return df
@@ -283,6 +310,11 @@ def getDFs(evlist):
 # emptyDF = pd.DataFrame({'DATE': date.today(), 'START': '', 'PEAK': '', 'END': '', 'MAGNITUDE': [], 'LOCATION': '', 'ARNUMBER': ''})
 
     
-noaaDF = getDFs(noaa)
-herDF = getDFs(her)
-mergedDF = getDFs(merged)
+# noaaDF = getDFs(noaa)
+# herDF = getDFs(her)
+smerged = sortList(merged)
+mergedDF = getDFs(smerged)
+
+# noaaDF.to_csv("noaaevs0519.csv")
+# herDF.to_csv("herevs0519.csv")
+mergedDF.to_csv("mergedevs0519.csv")
