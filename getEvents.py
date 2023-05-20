@@ -157,13 +157,13 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             print(float(event2["MAGNITUDE_HER"][1:]))
             
             mag1 = float(event1["MAGNITUDE_NOAA"][1:])
-            class1 = event1["MAGNITUDE_NOAA"][0] if type(event1["MAGNITUDE_NOAA"][0]) == "" else 100 
+            class1 = event1["MAGNITUDE_NOAA"][0] if type(event1["MAGNITUDE_NOAA"][0]) == "" else 100 # maybe this is wrong? "MAGNITUDE"
             
             mag2 = float(event2["MAGNITUDE_HER"][1:])
-            class2 = event2["MAGNITUDE_NOAA"][0] if type(event2["MAGNITUDE_NOAA"][0]) == "" else 2100 
+            class2 = event2["MAGNITUDE_NOAA"][0] if type(event2["MAGNITUDE_NOAA"][0]) == "" else 2100 # maybe this is wrong?
             if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and class1==class2 and abs(mag1-mag2)<0.2):
                 match = True
-                newevent = event2
+                newevent = event1
 #                 # magnitudes = []
 #                 if(event1["MAGNITUDE_NOAA"] == event2["MAGNITUDE_HER"]): #1
                   
@@ -171,7 +171,7 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
                 newevent["LOCATION_HER"] = event2["LOCATION_HER"]
                 newevent["LOCATION_NOAA"] = event1["LOCATION_NOAA"]
                 newevent["MAGNITUDE_HER"] = event2["MAGNITUDE_HER"]
-                newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"]
+                newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"] # also remove newevent["LOCATION/MAGNITUDE"]
                 # print("type1")
                 # print(event1)
                 # print(event2)
@@ -195,7 +195,7 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             newevent = event2
             # magnitudes1 = []
             # magnitudes1.append(event2["MAGNITUDE"])
-            newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"]
+            newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"] # SAME POTENTIAL ERROR HERE?
             newevent["MAGNITUDE_HER"] = ""
             newevent["LOCATION_NOAA"] = event1["LOCATION_NOAA"]
             newevent["LOCATION_HER"] = ""

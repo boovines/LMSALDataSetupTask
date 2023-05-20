@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 
 
 import sunpy.map
-from sunpy.net import Fido
-from sunpy.net import attrs as a
+# from sunpy.net import Fido
+# from sunpy.net import attrs as a
 import matplotlib.pyplot as plt
 
 import sunpy.coordinates
@@ -275,6 +275,7 @@ def getData():
     cactus = getCMEs("cactus")
     return cdaw, seeds, cactus    
 
+# def
 cdaw, seeds, cactus = getData()
 
 cmelist4 = mergeLists(cdaw, seeds)

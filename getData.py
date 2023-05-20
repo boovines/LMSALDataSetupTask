@@ -14,8 +14,14 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 import matplotlib.pyplot as plt
 
 
-import sunpy.map
-from sunpy.net import Fido
-from sunpy.net import attrs as a
+# import sunpy.map
+# from sunpy.net import Fido
+# from sunpy.net import attrs as a
 
 import datetime as dt
+
+from getFTP import getFTPtar
+import getCMEdata
+
+getFTPtar(20220802, "SRS", "/Users/justinhou/Documents/data") # write code to replace existing file if not downloaded within the same day prior
+
