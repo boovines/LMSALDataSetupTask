@@ -111,7 +111,7 @@ def getTop10(fis):
     from operator import itemgetter
     sfis = sorted(fis, key=itemgetter(1), reverse=True)
     # print(stfis)
-    ret[s for s in sfis[:10]]
+    return [s for s in sfis[:10]]
 
 
 def appendData():

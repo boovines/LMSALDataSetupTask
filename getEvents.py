@@ -280,14 +280,20 @@ def makeFinalList(splitByYear=False, year=''):
         
         snoaa = sortList(noaa)
         noaaDF = getDFs(snoaa)
-        noaaDF.to_csv("noaaevs0519.csv")
+        noaaDF.to_csv("noaaevs.csv")
         
         sher = sortList(her)
         herDF = getDFs(sher)
-        herDF.to_csv("herevs0519.csv")
+        herDF.to_csv("herevs.csv")
         twolistsmerged = mergeLists(noaa, her)
         
         # newlist = mergeLists(twolistsmerged, reports[2])
+        smerged = sortList(twolistsmerged)
+        mergedDF = getDFs(smerged)
+
+        # noaaDF.to_csv("noaaevs0519.csv")
+        # herDF.to_csv("herevs0519.csv")
+        mergedDF.to_csv("mergedevs.csv")
         
         return noaa, her, twolistsmerged #newlist
         
@@ -312,9 +318,4 @@ noaa, her, merged = makeFinalList()
     
 # noaaDF = getDFs(noaa)
 # herDF = getDFs(her)
-smerged = sortList(merged)
-mergedDF = getDFs(smerged)
 
-# noaaDF.to_csv("noaaevs0519.csv")
-# herDF.to_csv("herevs0519.csv")
-mergedDF.to_csv("mergedevs0519.csv")

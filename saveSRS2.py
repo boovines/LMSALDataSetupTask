@@ -163,7 +163,7 @@ def getData():
     
     print(flattenedfinallist)
     
-    saveData(flattenedfinallist, "03102023")
+    saveData(flattenedfinallist, "")
 
 getData()
 
