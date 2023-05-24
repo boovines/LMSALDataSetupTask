@@ -13,6 +13,8 @@ from astropy.visualization import ImageNormalize, SqrtStretch
 
 import datetime as dt
 
+from getFTP import extractFromTar
+
 months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
 
@@ -80,25 +82,29 @@ def dictify(ardata): # Append all SRS data for that day to the respective ARNUM
     return dictlist
 
 
-def saveData(finaldata, versionDate):
+def saveData(path, finaldata, versionDate):
     import pickle
 
     # Store data (serialize)
     fn = f'srsdata{versionDate}.pkl'
+    # path = "/Users/jhou/Documents/data"
     if not os.path.exists(fn):
-        with open(path, 'wb') as handle:
+        with open(f'{path}/{fn}', 'wb') as handle:
             pickle.dump(finaldata, handle, protocol=pickle.HIGHEST_PROTOCOL)
         print("saved")
         
     else:
         print("Not Saved: rename version")
 
-def getData():
+def getData(p):
     years = []
     for i in range(2010, 2022):
         years.append(i)
     
     finallist = []
+    # extractFromTar("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "SRS")
+    
+    extractFromTar(p, "SRS")
         
     for year in years:
         print(year)
@@ -106,12 +112,15 @@ def getData():
         dataall = []
         arnumraw = []
         arnums = []
-        path = f"/sanhome/jhou/srs-data/{year}_SRS"
-        count1125 = 0
+        path = f"{p}/ftp_download_SRS/{year}_SRS"#f"/sanhome/jhou/srs-data/{year}_SRS"
+        # path = f"{year}_SRS"
         print(path)
-        
+        count1125 = 0
+        # print(path)
+        print(len(os.listdir(path)))
         
         for file in os.listdir(path): # 
+            print(file)
             
             date, data = extractData(f"{path}/{file}")
             
@@ -163,9 +172,9 @@ def getData():
     
     print(flattenedfinallist)
     
-    saveData(flattenedfinallist, "03102023")
+    saveData(p, flattenedfinallist, "")
 
-getData()
+getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
 
 
 
