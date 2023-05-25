@@ -20,7 +20,7 @@ from sunpy.net import attrs as a
 
 import datetime as dt
 
-
+import requests
 
 # directory = f'/sanhome/jhou/{reportName}/goes_xray_event_list_{year}.txt'
 months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
@@ -43,13 +43,38 @@ def parseEventData(directory, skippedLines): # parse text file
         # print(data)
         return data
         
+def getEventData(p, reportType, startyear=2010, endyear = dt.date.today().year):
+    if 'goes-xrs-reports-HER' in reportType:
+        root = f"https://hesperia.gsfc.nasa.gov/goes/goes_event_listings_HER"
+    else:
+        root = f"https://hesperia.gsfc.nasa.gov/goes/goes_event_listings"
+    
+    if not os.path.exists(f"{p}/{reportType}"):
+        os.mkdir(f"{p}/{reportType}")
         
 
-def getEventData(reportType, year, file=''):
-    if file != '':
+        for i in range(startyear, endyear+1):
+            url = f"{root}/goes_xray_event_list_{i}.txt" 
+            r = requests.get(url, allow_redirects=True)
+
+            open(f"{p}/{reportType}/goes_xray_event_list_{i}.txt", 'wb').write(r.content)
+    elif os.path.exists(f"{p}/{reportType}" and endyear = dt.date.today().year:
+        os.remove(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt")
+        url = f"{root}/goes_xray_event_list_{dt.date.today().year}.txt" 
+        r = requests.get(url, allow_redirects=True)
+
+        open(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt", 'wb').write(r.content)
+    else:
+        continue
+    
+
+
+    
+def extractEventData(p, reportType, year, file, sanhome=False):
+    if not sanhome: #file != '':
         skippedLines = 6 #if ('goes-xrs-reports' == reportType or 'goes-xrs-reports-HER' in reportType) else 0
         # print(file)
-        directory = f'{reportType}/{file}'
+        directory = f'{p}/{reportType}/{file}'
         data = parseEventData(directory, skippedLines)
         
     else:
@@ -240,13 +265,17 @@ def getDFs(evlist):
     for ev in evlist:
         dfs.append(pd.DataFrame(ev, index = [0]))
     return pd.concat(dfs)
+
 def sortList(l):
     return sorted(l, key=lambda x: x['DATE'])
-def makeFinalList(splitByYear=False, year=''):
+
+def makeFinalList(p, splitByYear=False, year=''):
+    
+    
     if splitByYear:
-        # temp1 = getEventData('old-goes-xrs-reports', str(year))
-        temp2 = getEventData('goes-xrs-reports', str(year))
-        temp3 = getEventData('goes-xrs-reports-HER', str(year))
+        # temp1 = extractEventData('old-goes-xrs-reports', str(year))
+        temp2 = extractEventData('goes-xrs-reports', str(year))
+        temp3 = extractEventData('goes-xrs-reports-HER', str(year))
         
         # report1 = organizeDatav1(temp1)
         report2 = organizeDatav2('goes-xrs-reports', temp2)
@@ -261,12 +290,13 @@ def makeFinalList(splitByYear=False, year=''):
         reportTypes = ['goes-xrs-reports', 'goes-xrs-reports-HER']#['old-goes-xrs-reports', 'goes-xrs-reports', 'goes-xrs-reports-HER']
         reports = []
         for i in range(len(reportTypes)):
-            path = f"/sanhome/jhou/{reportTypes[i]}"
+            path = f"{p}/{reportTypes[i]}" #f"/sanhome/jhou/{reportTypes[i]}"
+            getEventData(p, reportTypes[i])
             report = []
             files = [item for item in os.listdir(path) if item[0:2]!="._"]
             for file in files:
                 # print([item for item in os.listdir(path) if item[0:2]!="._"])
-                temp1 = getEventData(path, str(year), file)
+                temp1 = extractEventData(p, reportTypes[i], str(year), file)
                 temp2 = organizeDatav2(reportTypes[i], temp1)#organizeDatav1(temp1) if (i==0) else organizeData2(temp1)
                 
                     
@@ -280,18 +310,24 @@ def makeFinalList(splitByYear=False, year=''):
         
         snoaa = sortList(noaa)
         noaaDF = getDFs(snoaa)
-        noaaDF.to_csv("noaaevs0519.csv")
+        noaaDF.to_csv(f"{p}/noaaevs{str(dt.date.today())}.csv")
         
         sher = sortList(her)
         herDF = getDFs(sher)
-        herDF.to_csv("herevs0519.csv")
+        herDF.to_csv(f"{p}/herevs{str(dt.date.today())}.csv")
         twolistsmerged = mergeLists(noaa, her)
         
         # newlist = mergeLists(twolistsmerged, reports[2])
+        smerged = sortList(twolistsmerged)
+        mergedDF = getDFs(smerged)
+
+        # noaaDF.to_csv("noaaevs0519.csv")
+        # herDF.to_csv("herevs0519.csv")
+        mergedDF.to_csv(f"{p}/mergedevs{str(dt.date.today())}.csv")
         
         return noaa, her, twolistsmerged #newlist
         
-noaa, her, merged = makeFinalList()  
+noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
 # print(merged)
 
 # noaaline1 = pd.DataFrame(noaa[0])
@@ -312,9 +348,4 @@ noaa, her, merged = makeFinalList()
     
 # noaaDF = getDFs(noaa)
 # herDF = getDFs(her)
-smerged = sortList(merged)
-mergedDF = getDFs(smerged)
 
-# noaaDF.to_csv("noaaevs0519.csv")
-# herDF.to_csv("herevs0519.csv")
-mergedDF.to_csv("mergedevs0519.csv")

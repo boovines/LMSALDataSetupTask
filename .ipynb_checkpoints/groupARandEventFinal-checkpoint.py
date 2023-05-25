@@ -165,9 +165,9 @@ def findMatches(ar, allevs): # use bottomleft topright to create array of ars th
     for index, ev in evsInRange.iterrows():
         # evdate = ev["DATE"]
         
-        # evnum = int(ev["ARNUMBER"] % 10000) if (not np.isnan(ev["ARNUMBER"])) else 0 # do this if not new
+        evnum = int(ev["ARNUMBER"] % 10000) if (not np.isnan(ev["ARNUMBER"])) else 0 # do this if not new
         
-        if evnum != ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
+        if evnum != ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
             print("found arnummmmmmmmmmmm")
             matchedevs.append(ev)
         else:
@@ -193,12 +193,16 @@ def findMatches(ar, allevs): # use bottomleft topright to create array of ars th
                 print(bl, tr, la, lo, ev["LOCATION"])
             
             
-            if(inbounds(bl, tr, ev["LOCATION"])):
-                # print(str(evdate)[:-9], str(date))
-                
-                print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
-                # print(ev["LOCATION"])
-                matchedevs.append(ev)
+                if(inbounds(bl, tr, ev["LOCATION"])):
+                    # print(str(evdate)[:-9], str(date))
+
+                    print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+                    # print(ev["LOCATION"])
+                    matchedevs.append(ev)
+            else:
+                if evnum != ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
+                    print("No LOCATION, only ARNUM available")
+                    matchedevs.append(ev)
         # except:
         #     pass
         

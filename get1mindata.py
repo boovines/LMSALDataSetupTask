@@ -35,45 +35,58 @@ import calendar
 
 months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
-def getLatest(path, version, latest=True): # check if already saved latest. else, get latest from https server
-    if(not latest):
-        date = datetime.now()
-        y = date.strftime("%y")
-        m = date.strftime("%m")
-        if not os.path.exists(f'{path}/goes14onemin.nc'):
-            url14 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g16_s20170207_e20{y}{m}{lastday}_v2-1-0.nc" # THESE ARE WRONG
-            r = requests.get(url16, allow_redirects = True)
-            open(f"goes14onemin.nc", "wb").write(r.content)
-            
-        if not os.path.exists(f'{path}/goes15onemin.nc'):
-            url15 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g16_s20170207_e20{y}{m}{lastday}_v2-1-0.nc" # THESE ARE WRNOG
-            r = requests.get(url16, allow_redirects = True)
-            open(f"goes15onemin.nc", "wb").write(r.content)
+def getLatest(path, version): # check if already saved latest. else, get latest from https server
+    # if(not latest):
+    date = datetime.now()
+    y = date.strftime("%y")
+    m = date.strftime("%m")
+    if not os.path.exists(f'{path}/goes13onemin.nc'):
+        url13 = f"https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/science/xrs/goes13/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g13_s20130601_e20171214_v1-0-0.nc" 
+        r = requests.get(url13, allow_redirects = True)
+        open(f'{path}/goes13onemin.nc', "wb").write(r.content)
         
-        
-        lastday = "0"+str(int(date.strftime("%d"))-3) if ((int(date.strftime("%d"))-3)//10==0) else str(int(date.strftime("%d"))-3)
-        print(lastday)
-        url16 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g16_s20170207_e20{y}{m}{lastday}_v2-1-0.nc"
-        r = requests.get(url16, allow_redirects = True)
-        open(f"goes16onemin.nc", "wb").write(r.content)
+    if not os.path.exists(f'{path}/goes14onemin.nc'):
+        url14 = f"https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/science/xrs/goes14/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g14_s20090901_e20200304_v1-0-0.nc" 
+        r = requests.get(url14, allow_redirects = True)
+        open(f'{path}/goes14onemin.nc', "wb").write(r.content)
 
-        url17 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes17/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g17_s20180601_e20{y}{m}{lastday}_v2-1-0.nc"
-        r = requests.get(url17, allow_redirects = True)
-        open(f"goes17onemin.nc", "wb").write(r.content)
-        print("UPDATED")
-    else:
-        ds = nc.Dataset(f"./goes{version}onemin.nc")
-        # for var in ds.variables.values():
-        #     print(var)
-        xrs = ds["xrsb_flux"]
-        print(xrs)
+    if not os.path.exists(f'{path}/goes15onemin.nc'):
+        url15 = f"https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/science/xrs/goes15/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g15_s20100331_e20200304_v1-0-0.nc"
+        r = requests.get(url15, allow_redirects = True)
+        open(f'{path}/goes15onemin.nc', "wb").write(r.content)
+
+
+    lastday = "0"+str(int(date.strftime("%d"))-3) if ((int(date.strftime("%d"))-3)//10==0) else str(int(date.strftime("%d"))-3)
+    print(lastday)
+
+    if os.path.exists(f'{path}/goes16onemin.nc'):
+        os.remove(f'{path}/goes16onemin.nc')
+    
+    url16 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g16_s20170207_e20{y}{m}{lastday}_v2-2-0.nc"
+    r = requests.get(url16, allow_redirects = True)
+    open(f'{path}/goes16onemin.nc', "wb").write(r.content)
+
+
+
+    if os.path.exists(f'{path}/goes17onemin.nc'):
+        os.remove(f'{path}/goes17onemin.nc')
+    url17 = "https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes17/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g17_s20180601_e20230110_v2-2-0.nc" #f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes17/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g17_s20180601_e20{y}{m}{lastday}_v2-2-0.nc"
+    r = requests.get(url17, allow_redirects = True)
+    open(f'{path}/goes17onemin.nc', "wb").write(r.content)
+    print("UPDATED")
+    # else:
+    #     ds = nc.Dataset(f"./goes{version}onemin.nc")
+    #     # for var in ds.variables.values():
+    #     #     print(var)
+    #     xrs = ds["xrsb_flux"]
+    #     print(xrs)
 #         for mint in xrs:
 #             if int(str(mint)[-1])<7:
 #                 pass# print(mint)
     
     
 
-getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "16", False)
+getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "16")
 sat_life = {
         "goes13": [dt.datetime(2013, 6, 1, 0, 0), dt.datetime(2017, 12, 31, 0, 0)], 
         "goes14": [dt.datetime(2009, 9, 1, 0, 0), dt.datetime(2020, 3, 31, 0, 0)], 

@@ -29,8 +29,8 @@ from ncflag import FlagWrap
 
 num_vars = 2
 make_plot = 1
-ds = nc.Dataset("./2010/g14_xrs_1m_20100101_20100131.nc")
-ds2 = nc.Dataset("./goes14onemin.nc")
+# ds = nc.Dataset("./2010/g14_xrs_1m_20100101_20100131.nc")
+# ds2 = nc.Dataset("./goes14onemin.nc")
 
 sat_life = {
         "13": [dt.datetime(2013, 6, 1, 0, 0), dt.datetime(2017, 12, 14, 22, 59)], 
@@ -117,9 +117,9 @@ def getIndex(arr, low, high, x):
 #     day2 = end
 #     for i in range(delta.days+1):
 #         day = startdate + timedelta(days=i) 
-def fillGap1(xrs, isNew):
+def fillGap1(p, xrs, isNew):
     # fill in 2010s
-    with nc.Dataset("sci_xrsf-l2-avg1m_g14_s20090901_e20200304_v1-0-0.nc") as nc_in:
+    with nc.Dataset(f"{p}/goes14onemin.nc") as nc_in: #"sci_xrsf-l2-avg1m_g14_s20090901_e20200304_v1-0-0.nc") as nc_in:
         times = cftime.num2pydate(nc_in.variables["time"][:], nc_in.variables["time"].units)
         xrsb_flux = np.ma.filled(nc_in.variables["xrsb_flux"][:], fill_value=np.nan)
     if isNew:
@@ -147,16 +147,17 @@ def makeNewData(p):
     # length2 = []
     print("here")
     
-    filenames = ["sci_xrsf-l2-avg1m_g13_s20130601_e20171214_v1-0-0.nc", "sci_xrsf-l2-avg1m_g14_s20090901_e20200304_v1-0-0.nc", "sci_xrsf-l2-avg1m_g15_s20100331_e20200304_v1-0-0.nc"]
+    # filenames = ["sci_xrsf-l2-avg1m_g13_s20130601_e20171214_v1-0-0.nc", "sci_xrsf-l2-avg1m_g14_s20090901_e20200304_v1-0-0.nc", "sci_xrsf-l2-avg1m_g15_s20100331_e20200304_v1-0-0.nc"]
     
-    for i in range(13,16):
-        fn = filenames[i-13]
-        if not os.path.exists(fn):
-            with open(fn, "wb") as f:
-                url_path = f"https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/science/xrs/goes{i}/xrsf-l2-avg1m_science/"
-                r = requests.get(url_path + fn)
-                f.write(r.content)
-        ds = nc.Dataset(f"./goes{i}onemin.nc") # 4320000 4320060
+    for i in range(13,18):
+        fn = f"{p}/goes{i}onemin.nc"#filenames[i-13]
+#         if not os.path.exists(fn):
+#             with open(fn, "wb") as f:
+#                 url_path = f"https://www.ncei.noaa.gov/data/goes-space-environment-monitor/access/science/xrs/goes{i}/xrsf-l2-avg1m_science/"
+                
+#                 r = requests.get(url_path + fn)
+#                 f.write(r.content)
+        ds = nc.Dataset(fn) # 4320000 4320060
         data.append(ds)
         
         with nc.Dataset(fn) as nc_in:
@@ -173,72 +174,72 @@ def makeNewData(p):
         print(xrsb_flux)
         
     
-    #g16
-    d = dt.datetime.today()
-    day = str(d.day-3).zfill(2) if d.weekday()==0 else str(d.day-1).zfill(2)
-    month = str(d.month).zfill(2)
-    filename = f"sci_xrsf-l2-avg1m_g16_s20170207_e20230204_v2-1-0.nc"#{month}{day}_v2-1-0.nc"
-    if not os.path.exists(filename):
-        with open(filename, "wb") as f:
-            url_path = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/"
-            r = requests.get(url_path + filename)
-            f.write(r.content)
-            
-    with nc.Dataset(filename) as nc_in:
-        times = cftime.num2pydate(nc_in.variables["time"][:], nc_in.variables["time"].units)
-        # print(nc_in.variables)
-        xrsb_flags = FlagWrap.init_from_netcdf(nc_in.variables["xrsb_flag"])
-        print(nc_in.variables["xrsb_flag"])
-        xrsb_flux = np.ma.filled(nc_in.variables["xrsb_flux"][:], fill_value=np.nan)
-        print(xrsb_flags)
-    good_data = xrsb_flags.get_flag("good_data")
-    xrsb_flux[~good_data] = np.nan 
-    print(xrsb_flux)
+#     #g16
+#     d = dt.datetime.today()
+#     day = str(d.day-3).zfill(2) if d.weekday()==0 else str(d.day-1).zfill(2)
+#     month = str(d.month).zfill(2)
+#     filename = f"sci_xrsf-l2-avg1m_g16_s20170207_e20230204_v2-1-0.nc"#{month}{day}_v2-1-0.nc"
+#     if not os.path.exists(filename):
+#         with open(filename, "wb") as f:
+#             url_path = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/"
+#             r = requests.get(url_path + filename)
+#             f.write(r.content)
     
-    xrs.append(pd.DataFrame(xrsb_flux, times))
+#     with nc.Dataset(filename) as nc_in:
+#         times = cftime.num2pydate(nc_in.variables["time"][:], nc_in.variables["time"].units)
+#         # print(nc_in.variables)
+#         xrsb_flags = FlagWrap.init_from_netcdf(nc_in.variables["xrsb_flag"])
+#         print(nc_in.variables["xrsb_flag"])
+#         xrsb_flux = np.ma.filled(nc_in.variables["xrsb_flux"][:], fill_value=np.nan)
+#         print(xrsb_flags)
+#     good_data = xrsb_flags.get_flag("good_data")
+#     xrsb_flux[~good_data] = np.nan 
+#     print(xrsb_flux)
+    
+#     xrs.append(pd.DataFrame(xrsb_flux, times))
     
 
-    #do the same for GOES 17
-    xrs17 = pd.DataFrame({})
-    times17 = pd.DataFrame({})
-    flags17 = pd.DataFrame({})
-    for j in range(18, 24):
-        filename = f"sci_xrsf-l2-avg1m_g17_y20{j}_v2-1-0.nc"
-        if not os.path.exists(filename):
-            with open(filename, "wb") as f:
-                url_path = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes17/l2/data/xrsf-l2-avg1m_science/"
-                r = requests.get(url_path + filename)
-                f.write(r.content)
+#     #do the same for GOES 17
+#     xrs17 = pd.DataFrame({})
+#     times17 = pd.DataFrame({})
+#     flags17 = pd.DataFrame({})
+#     for j in range(18, 24):
+#         filename = f"sci_xrsf-l2-avg1m_g17_y20{j}_v2-1-0.nc"
+#         if not os.path.exists(filename):
+#             with open(filename, "wb") as f:
+#                 url_path = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes17/l2/data/xrsf-l2-avg1m_science/"
+#                 r = requests.get(url_path + filename)
+#                 f.write(r.content)
 
-        with nc.Dataset(filename) as nc_in:
-            times = cftime.num2pydate(nc_in.variables["time"][:], nc_in.variables["time"].units)
-            # print(nc_in.variables)
-            xrsb_flags = FlagWrap.init_from_netcdf(nc_in.variables["xrsb_flag"])
-            print(nc_in.variables["xrsb_flag"])
-            xrsb_flux = np.ma.filled(nc_in.variables["xrsb_flux"][:], fill_value=np.nan)
-            print(xrsb_flags)
-        good_data = xrsb_flags.get_flag("good_data")
-        xrsb_flux[~good_data] = np.nan
-        print(xrsb_flux)
-        print("EJLKRJLKJSDLKFJLKSDJFLKSDJFKLJSDLKFJSLDKFJLKSDJFLDKSJFLKDSJFLSDJFLSDJFL", xrs17)
-        xrs17 = pd.concat([xrs17, pd.DataFrame(xrsb_flux, times)])
-        # xrs17.append(pd.DataFrame(xrsb_flux, times))
+#         with nc.Dataset(filename) as nc_in:
+#             times = cftime.num2pydate(nc_in.variables["time"][:], nc_in.variables["time"].units)
+#             # print(nc_in.variables)
+#             xrsb_flags = FlagWrap.init_from_netcdf(nc_in.variables["xrsb_flag"])
+#             print(nc_in.variables["xrsb_flag"])
+#             xrsb_flux = np.ma.filled(nc_in.variables["xrsb_flux"][:], fill_value=np.nan)
+#             print(xrsb_flags)
+#         good_data = xrsb_flags.get_flag("good_data")
+#         xrsb_flux[~good_data] = np.nan
+#         print(xrsb_flux)
+#         print("EJLKRJLKJSDLKFJLKSDJFLKSDJFKLJSDLKFJSLDKFJLKSDJFLDKSJFLKDSJFLSDJFLSDJFL", xrs17)
+#         xrs17 = pd.concat([xrs17, pd.DataFrame(xrsb_flux, times)])
+#         # xrs17.append(pd.DataFrame(xrsb_flux, times))
     
-    xrs.append(xrs17)
+#     xrs.append(xrs17)
     # times.append(times17)
     # flags.append(flags17)
     
-    finalxrs = fillGap1(xrs, True)
+    finalxrs = fillGap1(p, xrs, True)
 
     import pickle
 
     data = {'XRS': xrs}#, 'TIMES': times, 'FLAGS': flags}
 
     # Store data (serialize)
-    with open('new1mindata.pickle', 'wb') as handle:
+    with open(f'{p}/new1mindata.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-makeNewData(path)
+makeNewData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
 
 
 
@@ -301,11 +302,11 @@ def makeOldData(p):
     
     # print(xrs)
     import pickle
-    finalxrs = fillGap1(xrs, False)
+    finalxrs = fillGap1(p, xrs, False)
     data = {'XRS': finalxrs}#, 'TIMES': times, 'FLAGS': flags}
 
     # Store data (serialize)
-    with open('old1mindata.pickle', 'wb') as handle:
+    with open(f'{p}/old1mindata.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 makeOldData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")

@@ -42,7 +42,7 @@ def getHEK(directory):
 def getAll(directory):
     getFTPtar(2022, "SRS", directory) # write code to replace existing file if not downloaded within the same day prior
 
-    getFTPtar(2022, "events", directory)
+    # getFTPtar(2022, "events", directory)
 
     # getHEK(directory)
     # getCMEdata.getData()

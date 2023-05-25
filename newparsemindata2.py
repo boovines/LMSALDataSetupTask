@@ -26,8 +26,8 @@ import requests
 
 num_vars = 2
 make_plot = 1
-ds = nc.Dataset("./2010/g14_xrs_1m_20100101_20100131.nc")
-ds2 = nc.Dataset("./goes14onemin.nc")
+# ds = nc.Dataset("./2010/g14_xrs_1m_20100101_20100131.nc")
+# ds2 = nc.Dataset("./goes14onemin.nc")
 
 sat_life = {
         "13": [dt.datetime(2013, 6, 1, 0, 0), dt.datetime(2017, 12, 14, 22, 59)], 
@@ -120,14 +120,13 @@ def getData(x, calibrated):
 
 
 # goestype = number, 
-def getRawFluxes(goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)):
+def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)):
     
     bestfluxes = []
     besttimes = []
     bestflags = []
 
-    # which data preferred
-    route = '/Users/jhou/oldpkls/new1mindata.pickle' if calibrated else 'old1mindata.pickle'
+    route = f'{p}/new1mindata.pickle' if calibrated else f'{p}/old1mindata.pickle'
     
 
     xrs = []
@@ -209,7 +208,7 @@ def getFluxGraphs(fluxes, length1, length2, starthr, scale):
 # print(fluxes_new)
 
  
-def stitchTogether(startdate, starttime, enddate, endtime, calibrated=True):
+def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
     y1 = startdate.year
     m1 = startdate.month
     d1 = startdate.day
@@ -244,7 +243,7 @@ def stitchTogether(startdate, starttime, enddate, endtime, calibrated=True):
     r = 17 if calibrated else 1
     for i in range(r):
         startdate, enddate, goestypes = getData(i, calibrated)
-        fluxes, nancount = getRawFluxes(goestypes, calibrated, startdate, enddate)
+        fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
         fluxes_total_new.append(fluxes) if calibrated else fluxes_total_old.append(fluxes)
         # times_total_new.append(times)
         # flags_total_new.append(flags)
@@ -301,11 +300,11 @@ def stitchTogether(startdate, starttime, enddate, endtime, calibrated=True):
     if calibrated:
         fluxes_total_new = [f for flux in fluxes_total_new for f in flux]
         df1 = pd.DataFrame(fluxes_total_new)#{'dates': times_total_new})#,'fluxes': fluxes_total_new, 'flags': flags_total_new})
-        df1.to_pickle("newfluxes.pkl")
+        df1.to_pickle(f"{p}/newfluxes.pkl")
     else:
         fluxes_total_old = [f for flux in fluxes_total_old for f in flux]
         df1 = pd.DataFrame(fluxes_total_old)#{'dates': times_total_new})#,'fluxes': fluxes_total_new, 'flags': flags_total_new})
-        df1.to_pickle("oldfluxes.pkl")
+        df1.to_pickle(f"{p}/oldfluxes.pkl")
 #     times_total_new = [f for time in times_total_new for f in time]
 #     flags_total_new = [f for flag in flags_total_new for f in flag]
     
@@ -324,7 +323,7 @@ def stitchTogether(startdate, starttime, enddate, endtime, calibrated=True):
             
 # fluxes = stitchTogether(dt.datetime(2021,7,3), "1418", dt.datetime(2021,7,3), "1434")
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2023,1,5), "2359") #endgoal
-fluxes = stitchTogether(dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", True)
+fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata",dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", True)
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2010,3,31), "0050")
 # fluxes = stitchTogether(dt.datetime(2017,9,10), "1605", dt.datetime(2017,9,10), "1607")
 # fluxes = stitchTogether(dt.datetime(2017,9,25), "0757", dt.datetime(2017,9,25), "0808")
