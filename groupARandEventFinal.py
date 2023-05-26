@@ -162,6 +162,7 @@ def findMatches(ar, allevs): # use bottomleft topright to create array of ars th
     evsInRange = allevs.loc[allevs["PEAK"].between(str(today),str(tomorrow))]
     # print(evsInRange)
     evlist = []
+    mms = []
     for index, ev in evsInRange.iterrows():
         # evdate = ev["DATE"]
         
@@ -199,6 +200,8 @@ def findMatches(ar, allevs): # use bottomleft topright to create array of ars th
                     print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
                     # print(ev["LOCATION"])
                     matchedevs.append(ev)
+                    if evnum != ar['ARNUM'] and ev not in mms:
+                        mms.append(ev)
             else:
                 if evnum != ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
                     print("No LOCATION, only ARNUM available")
@@ -207,7 +210,7 @@ def findMatches(ar, allevs): # use bottomleft topright to create array of ars th
         #     pass
         
     # print(evlist, count)
-    return matchedevs
+    return matchedevs, mms
     
     # find the ar with smallest dist, return
 
@@ -229,19 +232,32 @@ def compileEvents():
     numtests = 100
     
     newSRSbyAR = []
-    
+    mismatches = []
     for i in range(len(srsbyAR)):
         allMatchedEvs = []
         # print(srsbyAR[i][arnums[i]])
+        mmsall = []
         for day in srsbyAR[i][arnums[i]]:
-            matchedEvs = findMatches(day, mergedevs)
+            matchedEvs, mms = findMatches(day, mergedevs)
             allMatchedEvs.append(matchedEvs)
+            mmsall.append(mms)
+        mmsall = [item for sublist in mmsall for item in sublist]
+        mismatches.append([arnums[i], mmsall])
         allMatchedEvs = [item for sublist in allMatchedEvs for item in sublist]
         
         newdict = srsbyAR[i]
         newdict[f"{arnums[i]}_EVENTS"] = allMatchedEvs
         
         newSRSbyAR.append(newdict)
+    
+    bothcount = 0
+    for index, ev in mergedevs.iterrows(): 
+        if (not np.isnan(ev["ARNUMBER"])) and type(ev["LOCATION"]) == type("hi"):
+            bothcount+=1
+    falsecount = len([item for sublist in mismatches for item in sublist])
+    print(falsecount/bothcount)
+
+
     
     # newsrsby ar get rid of repitition
     
