@@ -333,8 +333,11 @@ print(len(fluxes))
 # def convertFluxes(fluxes): # x = s*((detected-bkg)*gain/conversion_factor) # maybe not necessary
 #     return True
 
-def getFluxes():
-    return True
+def getFluxes(p, isNew):
+    fn = "newfluxes.pkl" if isNew else "oldfluxes.pkl"
+    if os.path.exists(f'{p}/{fn}.pkl'):
+        # add onto it by adjusting the start time param, but dont need to do this for old
+        return True
 
 # basically use the pkl file and replace 0 or close to 0 values
 # use sharp data stuff
