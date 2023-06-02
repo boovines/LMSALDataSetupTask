@@ -323,7 +323,7 @@ def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
             
 # fluxes = stitchTogether(dt.datetime(2021,7,3), "1418", dt.datetime(2021,7,3), "1434")
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2023,1,5), "2359") #endgoal
-fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata",dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", True)
+fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata",dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", False)
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2010,3,31), "0050")
 # fluxes = stitchTogether(dt.datetime(2017,9,10), "1605", dt.datetime(2017,9,10), "1607")
 # fluxes = stitchTogether(dt.datetime(2017,9,25), "0757", dt.datetime(2017,9,25), "0808")

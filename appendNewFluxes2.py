@@ -29,19 +29,19 @@ from ncflag import FlagWrap
 
 
 def getData():
-    lmsal = False
+    lmsal = True
     evData = 0
     newFluxData = 0
     oldFluxData = 0
     
-    direc = "/Users/jhou/Documents/data/" if lmsal else "Users/justinhou/Documents/data/"
-    with open(f'{direc}mergedevs0519.csv') as f:
+    direc = "/Users/jhou/LMSALDataSetupTaskOriginal/testdata/" if lmsal else "Users/justinhou/Documents/data/"
+    with open(f'{direc}mergedevs524.csv') as f:
         evData = pd.read_csv(f)#csv.reader(f)
     
     
     import pickle
     
-    route = f'{direc}newfluxes4.pkl'
+    route = f'{direc}newfluxes.pkl'
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         newFluxData = pickle.load(handle)
@@ -51,7 +51,7 @@ def getData():
         # for i in range(100):
         #     print(data[i])
         
-    route = f'{direc}oldfluxes.pkl'
+    route = f'{direc}tempoldfluxes.pkl'
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         oldFluxData = pickle.load(handle)
