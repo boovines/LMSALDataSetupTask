@@ -28,20 +28,20 @@ from ncflag import FlagWrap
 
 
 
-def getData():
+def getData(p):
     lmsal = True
     evData = 0
     newFluxData = 0
     oldFluxData = 0
     
-    direc = "/Users/jhou/LMSALDataSetupTaskOriginal/testdata/" if lmsal else "Users/justinhou/Documents/data/"
-    with open(f'{direc}mergedevs524.csv') as f:
+    # direc = "/Users/jhou/LMSALDataSetupTaskOriginal/testdata/" if lmsal else "Users/justinhou/Documents/data/"
+    with open(f'{p}/mergedevs524.csv') as f:
         evData = pd.read_csv(f)#csv.reader(f)
     
     
     import pickle
     
-    route = f'{direc}newfluxes.pkl'
+    route = f'{p}/newfluxes.pkl'
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         newFluxData = pickle.load(handle)
@@ -51,7 +51,7 @@ def getData():
         # for i in range(100):
         #     print(data[i])
         
-    route = f'{direc}tempoldfluxes.pkl'
+    route = f'{p}/tempoldfluxes.pkl'
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         oldFluxData = pickle.load(handle)
@@ -78,10 +78,10 @@ def changeDates(evData, i):
     
     return dt.datetime(y1, m1, d1, h1, mi1), dt.datetime(y1, m1, d1, h2, mi2), dt.datetime(y1, m1, d1, h3, mi3)
 
-def appendData():
+def appendData(p):
     lmsal = False
-    direc = direc = "/Users/jhou/Documents/data/" if lmsal else "Users/justinhou/Documents/data/"
-    evData, newFluxData, oldFluxData = getData()
+    # direc = direc = "/Users/jhou/Documents/data/" if lmsal else "Users/justinhou/Documents/data/"
+    evData, newFluxData, oldFluxData = getData(p)
     oldEventFluxes = []
     newEventFluxes = []
     
@@ -90,7 +90,7 @@ def appendData():
     classes = {1: "X", 2: "X", 3: "X", 4:"X", 5: "M", 6:"C", 7: "B", 8: "A", 9: "A", 10: "A", 11: "A"}
     count = 0
     count2 = 0
-    if not os.path.exists("newmergedevstest3.csv"):
+    if not os.path.exists(f"{p}/newmergedevstest3.csv"):
         for i in range(len(evData["DATE"])):
             # print(evData["DATE"][i])
             # y1 = int(evData["DATE"][i][0:4])
@@ -158,7 +158,7 @@ def appendData():
                 newEventFluxes.append(np.nan)
         print(count,count2)
     else:
-        with open(f'newmergedevstest3.csv') as f:
+        with open(f'{p}/newmergedevstest3.csv') as f:
             evData = pd.read_csv(f)#csv.reader(f)
             oldEventFluxes = evData["OLD_CALIB_FLUX"]
             newEventFluxes = evData["NEW_CALIB_FLUX"]
@@ -209,6 +209,6 @@ def appendData():
     evData["NEW_CALIB_MAG"] = newEventClassif
     
     
-    evData.to_csv(f"{direc}newmergedevs.csv")
+    evData.to_csv(f"{p}/newmergedevs.csv")
         
-appendData()
+appendData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
