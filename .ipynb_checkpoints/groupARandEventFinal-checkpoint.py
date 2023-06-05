@@ -152,6 +152,86 @@ def inbounds(bl, tr, loc):
 
 import time
 
+def arFilterFirst():
+    if evnum == ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
+        print("found arnummmmmmmmmmmm")
+        matchedevs.append(ev)
+        # pass
+    else:
+        # print("matching
+        # print(evdate, date)
+        # if (evdate==date):
+
+
+        count+=1
+        evlist.append(ev)
+        # print("here2")
+        duration = ev['PEAK']
+        duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
+        # print(date, type(date), "hereherehere")
+        # print(duration, type(duration), loc, type(loc))
+        # try:
+        # print(duration)
+        lon, lat = diffRot(loc, date, duration2)
+        print(lon,lat)
+        bl, tr, c = findARregion(lon, lat)
+        # print(evdate, str(date))
+        # print(bl, tr, ev["LOCATION"])
+        if (type(ev[f"LOCATION_{loctype}"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
+            la = int(ev[f"LOCATION_{loctype}"][1:3]) if ev[f"LOCATION_{loctype}"][0] == "N" else int(ev[f"LOCATION_{loctype}"][1:3]) * -1
+            lo = int(ev[f"LOCATION_{loctype}"][4:6]) if ev[f"LOCATION_{loctype}"][3] == "W" else int(ev[f"LOCATION_{loctype}"][4:6]) * -1
+            print(bl, tr, la, lo, ev[f"LOCATION_{loctype}"])
+
+
+            if(inbounds(bl, tr, ev[f"LOCATION_{loctype}"])):
+                # print(str(evdate)[:-9], str(date))
+
+                print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+                # print(ev["LOCATION"])
+                matchedevs.append(ev)
+                if evnum != ar['ARNUM']:# and (ev not in mms):
+                    # if ev in mms:
+                    #     pass
+                    # else:
+                    mms.append(ev) # FIX THIS AT SOME POINT USING EVENT INDICES
+
+def locationFilterFirst():
+    count+=1
+    evlist.append(ev)
+    # print("here2")
+    duration = ev['PEAK']
+    duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
+    # print(date, type(date), "hereherehere")
+    # print(duration, type(duration), loc, type(loc))
+    # try:
+    # print(duration)
+    lon, lat = diffRot(loc, date, duration2)
+    print(lon,lat)
+    bl, tr, c = findARregion(lon, lat)
+    # print(evdate, str(date))
+    # print(bl, tr, ev["LOCATION"])
+    if (type(ev[f"LOCATION_{loctype}"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
+        la = int(ev[f"LOCATION_{loctype}"][1:3]) if ev[f"LOCATION_{loctype}"][0] == "N" else int(ev[f"LOCATION_{loctype}"][1:3]) * -1
+        lo = int(ev[f"LOCATION_{loctype}"][4:6]) if ev[f"LOCATION_{loctype}"][3] == "W" else int(ev[f"LOCATION_{loctype}"][4:6]) * -1
+        print(bl, tr, la, lo, ev[f"LOCATION_{loctype}"])
+
+
+        if(inbounds(bl, tr, ev[f"LOCATION_{loctype}"])):
+            # print(str(evdate)[:-9], str(date))
+
+            print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+            # print(ev["LOCATION"])
+            matchedevs.append(ev)
+            if evnum != ar['ARNUM']:# and (ev not in mms):
+                # if ev in mms:
+                #     pass
+                # else:
+                mms.append(ev) # FIX THIS AT SOME POINT USING EVENT INDICES
+    else:
+        if evnum == ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
+            print("No LOCATION, only ARNUM available")
+            matchedevs.append(ev)
+
 def findMatches(ar, allevs, loctype): # use bottomleft topright to create array of ars that are valid, find ar that is closest to event region, if none, return none
     loc = ar[f"LOCATION"]
     date = ar["DATE"]
@@ -168,14 +248,16 @@ def findMatches(ar, allevs, loctype): # use bottomleft topright to create array 
         
         evnum = int(ev["ARNUMBER"] % 10000) if (not np.isnan(ev["ARNUMBER"])) else 0 # do this if not new
         
-        # if evnum != ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
+        # if evnum == ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
         #     print("found arnummmmmmmmmmmm")
         #     matchedevs.append(ev)
         #     # pass
         # else:
-        # print("matching
-        # print(evdate, date)
-        # if (evdate==date):
+        #     # print("matching
+        #     # print(evdate, date)
+        #     # if (evdate==date):
+
+
         count+=1
         evlist.append(ev)
         # print("here2")
@@ -221,10 +303,10 @@ def findMatches(ar, allevs, loctype): # use bottomleft topright to create array 
 
 def saveFile(d1, p):
     import pickle
-    with open(f'{p}/AREventAssignment3.pickle', 'wb') as handle:
+    with open(f'{p}/AREventAssignment2.pickle', 'wb') as handle:
         pickle.dump(d1, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
-def compileEvents(p, loctype):
+def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate = dt.datetime.today()):
     arnums, srsbyAR, mergedevs = getData(p)
     srsandevents = []
     srsandeventsbyAR = []
@@ -237,15 +319,16 @@ def compileEvents(p, loctype):
     numtests = 100
     
     newSRSbyAR = []
-    mismatches = []
+    mismatches = [] # events that are incorrectly assigned
     for i in range(len(srsbyAR)):
         allMatchedEvs = []
         # print(srsbyAR[i][arnums[i]])
         mmsall = []
         for day in srsbyAR[i][arnums[i]]:
-            matchedEvs, mms = findMatches(day, mergedevs, loctype)
-            allMatchedEvs.append(matchedEvs)
-            mmsall.append(mms)
+            if(day["DATE"]>=startdate and day["DATE"]<=enddate):
+                matchedEvs, mms = findMatches(day, mergedevs, loctype)
+                allMatchedEvs.append(matchedEvs)
+                mmsall.append(mms)
         mmsall = [item for sublist in mmsall for item in sublist]
         mismatches.append([arnums[i], mmsall])
         allMatchedEvs = [item for sublist in allMatchedEvs for item in sublist]
@@ -257,9 +340,10 @@ def compileEvents(p, loctype):
     
     bothcount = 0
     for index, ev in mergedevs.iterrows(): 
-        if (not np.isnan(ev["ARNUMBER"])) and type(ev[f"LOCATION_{p}"]) == type("hi"):
+        if (not np.isnan(ev["ARNUMBER"])) and type(ev[f"LOCATION_{loctype}"]) == type("hi"):
             bothcount+=1
     falsecount = len([item for sublist in mismatches for item in sublist])
+    print(mismatches)
     print(falsecount/bothcount)
 
 

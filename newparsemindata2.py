@@ -1,6 +1,6 @@
 import netCDF4 as nc # https://towardsdatascience.com/read-netcdf-data-with-python-901f7ff61648
 # https://www.ngdc.noaa.gov/stp/satellite/goes/doc/GOES_XRS_readme.pdf
-# with open("./test2.nc", 'rb') as fp:
+# with open("./test2.nc", 'rb') as fp: https://www.dropbox.com/install?next_url=%2Fhome#downloaded
 from datetime import datetime
 import numpy as np
 import datetime as dt

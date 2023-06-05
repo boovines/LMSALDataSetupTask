@@ -44,16 +44,16 @@ import sunpy.data.sample
 lis = []
 tfiscale = {"X": 10000, "M": 100000, "C": 1000000, "B": 10000000, "A": 100000000}
 
-def getData():
+def getData(p):
     import pickle
-    with open("AREventAssignment2.pickle", 'rb') as handle:
+    with open(f"{p}/AREventAssignment.pickle", 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         data = pickle.load(handle)
     return data
 
 
 def getTFIs(version):
-    data = getData()
+    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
     tfilist = []
     lis = []
     arnums = []
@@ -112,12 +112,13 @@ def getTop10(fis):
     sfis = sorted(fis, key=itemgetter(1), reverse=True)
     # print(stfis)
     return [s for s in sfis[:10]]
+print("\n", getTop10(tfis))
 
 
 def appendData():
-    data = getData()
+    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
     # get tfis and dfis and top 10s
     # reformat ar assigned list
-    
+# appendData()
 
 
