@@ -125,6 +125,7 @@ def detectDups():
         inRangeDict = evsInRange.to_dict('records')
         pairs = generatePairs(inRangeDict)
         denom+=len(pairs)
+        print(pairs, "\n",len(inRangeDict), "\n", "JSDLFJSDLF", num,denom)
         for pair in pairs:
             ev=pair[0]
             ev2=pair[1]
@@ -132,7 +133,7 @@ def detectDups():
             inside2 = int(ev2["PEAK"])>int(ev["START"]) and int(ev2["PEAK"])<int(ev["END"])
             # print(inside1)
             
-            if inside1: num+=1
+            if inside1 or inside2: num+=1
             # else: denom+=1
             # inside2 = ev2["PEAK"]>ev["START"] and ev2["PEAK"]<ev["END"]
             if inside1 or inside2:
