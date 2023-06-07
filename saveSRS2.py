@@ -174,7 +174,7 @@ def getData(p):
     
     saveData(p, flattenedfinallist, "")
 
-getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
 
 
 

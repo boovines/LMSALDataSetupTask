@@ -398,7 +398,7 @@ def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate =
     
 #     saveFile(srsandevents)
 
-compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "HER")
+# compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "HER")
 
 
 

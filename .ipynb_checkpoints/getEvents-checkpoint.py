@@ -58,14 +58,14 @@ def getEventData(p, reportType, startyear=2010, endyear = dt.date.today().year):
             r = requests.get(url, allow_redirects=True)
 
             open(f"{p}/{reportType}/goes_xray_event_list_{i}.txt", 'wb').write(r.content)
-    elif os.path.exists(f"{p}/{reportType}" and endyear = dt.date.today().year:
+    elif os.path.exists(f"{p}/{reportType}") and endyear == dt.date.today().year:
         os.remove(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt")
         url = f"{root}/goes_xray_event_list_{dt.date.today().year}.txt" 
         r = requests.get(url, allow_redirects=True)
 
         open(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt", 'wb').write(r.content)
     else:
-        continue
+        pass
     
 
 
@@ -327,7 +327,7 @@ def makeFinalList(p, splitByYear=False, year=''):
         
         return noaa, her, twolistsmerged #newlist
         
-noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
+# noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
 # print(merged)
 
 # noaaline1 = pd.DataFrame(noaa[0])

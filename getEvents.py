@@ -327,7 +327,7 @@ def makeFinalList(p, splitByYear=False, year=''):
         
         return noaa, her, twolistsmerged #newlist
         
-noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
+# noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
 # print(merged)
 
 # noaaline1 = pd.DataFrame(noaa[0])

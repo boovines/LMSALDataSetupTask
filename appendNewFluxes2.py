@@ -211,4 +211,4 @@ def appendData(p):
     
     evData.to_csv(f"{p}/newmergedevs.csv")
         
-appendData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# appendData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")

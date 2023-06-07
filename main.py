@@ -7,18 +7,33 @@ import newparsemindata2
 import appendNewFluxes2
 import groupARandEventFinal
 import getFIs
+import time
 
-def main():
-    getData.getAll()
-    saveSRS2.getData()
-    noaa, herr, merged = getEvents.makeFinalList()
+def main(path):
+    getData.getAll(path)
+    time.sleep(20)
+    saveSRS2.getData(path)
+    time.sleep(20)
+    noaa, herr, merged = getEvents.makeFinalList(path)
+    time.sleep(20)
+    
+    get1mindata.getLatest(path, "16")
+    time.sleep(20)
+    parsecheck3.makeNewData(path)
+    time.sleep(20)
+    parsecheck3.makeOldData(path)
+    time.sleep(20)
     # stitchTogether(startdate, starttime, enddate, endtime, calibrated=True)
-    newfluxes = newparsemindata2.stitchTogether(dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", True)
-    oldfluxes = newparsemindata2.stitchTogether(dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", False)
-    appendNewFluxes2.appendData()
-    groupARandEventFinal
-    groupARandEventFinal.compileEvents()
-    tfilist = getFIs.getTFIs()
+    newfluxes = newparsemindata2.stitchTogether(path, True)
+    time.sleep(20)
+    oldfluxes = newparsemindata2.stitchTogether(path, False)
+    time.sleep(20)
+    appendNewFluxes2.appendData(path)
+    time.sleep(20)
+    # groupARandEventFinal
+    groupARandEventFinal.compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "HER")
+    time.sleep(20)
+    tfilist = getFIs.getTFIs("NEW")
     top10TFIs = getFIs.getTop10(tfilist)
     return top10TFIs
-print(main())
+print(main("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest"))

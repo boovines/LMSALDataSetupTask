@@ -86,7 +86,7 @@ def getLatest(path, version): # check if already saved latest. else, get latest 
     
     
 
-getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "16")
+# getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "16")
 sat_life = {
         "goes13": [dt.datetime(2013, 6, 1, 0, 0), dt.datetime(2017, 12, 31, 0, 0)], 
         "goes14": [dt.datetime(2009, 9, 1, 0, 0), dt.datetime(2020, 3, 31, 0, 0)], 

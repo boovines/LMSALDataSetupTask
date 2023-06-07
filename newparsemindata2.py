@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import requests
-
+import pickle
 num_vars = 2
 make_plot = 1
 # ds = nc.Dataset("./2010/g14_xrs_1m_20100101_20100131.nc")
@@ -134,7 +134,6 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
     flags = []
     # data = []
     print("here")
-    import pickle
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         data = pickle.load(handle)
@@ -169,7 +168,8 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
                     #     print(count)
                     break
             except:
-                print(f"something went wrong here:{date1}")
+                # print(f"something went wrong here:{date1}")
+                pass
             count+=1
         
         if whichgoes == -1:
@@ -208,7 +208,7 @@ def getFluxGraphs(fluxes, length1, length2, starthr, scale):
 # print(fluxes_new)
 
  
-def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
+def stitchTogether(p, calibrated=True):
     y1 = startdate.year
     m1 = startdate.month
     d1 = startdate.day
@@ -239,15 +239,38 @@ def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
     fluxes_total_old = []
     times_total_old = []
     flags_total_old = []
+    
+    ftype = "newfluxes.pkl" if calibrated else "oldfluxes.pkl"
+    if not os.path.exists(f"{p}/{ftype}"):
 
-    r = 17 if calibrated else 1
-    for i in range(r):
-        startdate, enddate, goestypes = getData(i, calibrated)
-        fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
-        fluxes_total_new.append(fluxes) if calibrated else fluxes_total_old.append(fluxes)
-        # times_total_new.append(times)
-        # flags_total_new.append(flags)
-        
+        r = 17 if calibrated else 1
+        for i in range(r):
+            startdate, enddate, goestypes = getData(i, calibrated)
+            fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
+            fluxes_total_new.append(fluxes) if calibrated else fluxes_total_old.append(fluxes)
+            # times_total_new.append(times)
+            # flags_total_new.append(flags)
+            
+    else:
+        appended_fluxes = []
+        if calibrated:
+            # with open(f"{p}/newfluxes-Copy1.pkl", 'rb') as fp:
+            #     data = pickle.load(fp)
+            with open(f"{p}/newfluxes.pkl", 'rb') as fp:
+                data = pickle.load(fp)
+                print(data)
+                # d = data.to_dict()
+                # fluxes_total_new.append(d)
+                print(fluxes_total_new)
+            # print(data, data1)
+            startdate, enddate, goestypes = getData(100, calibrated)
+            # print(data["DATE"])
+            startdate = data["DATE"].iloc[-1]+dt.timedelta(minutes=1)
+            enddate = dt.datetime(dt.datetime.today().year,dt.datetime.today().month, dt.datetime.today().day) -dt.timedelta(days=2)
+            print(startdate, enddate)
+            fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
+            fluxes_total_new.append(fluxes) 
+        print(fluxes_total_new)
     # for i in range(17):
     #     startdate, enddate, goestypes = getData(i)
     #     fluxes, times, flags = getRawFluxes(goestypes, False, startdate, enddate)
@@ -299,8 +322,14 @@ def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
 #     print(dates, fluxes_new)
     if calibrated:
         fluxes_total_new = [f for flux in fluxes_total_new for f in flux]
-        df1 = pd.DataFrame(fluxes_total_new)#{'dates': times_total_new})#,'fluxes': fluxes_total_new, 'flags': flags_total_new})
-        df1.to_pickle(f"{p}/newfluxes.pkl")
+        if os.path.exists(f"{p}/newfluxes.pkl"):
+            df1 = pd.DataFrame(fluxes_total_new)
+            merged = pd.concat([data, df1], ignore_index=True, sort=False)
+            merged.to_pickle(f"{p}/newfluxes.pkl")
+        else:
+            df1 = pd.DataFrame(fluxes_total_new)#{'dates': times_total_new})#,'fluxes': fluxes_total_new, 'flags': flags_total_new})
+
+            df1.to_pickle(f"{p}/newfluxes.pkl")
     else:
         fluxes_total_old = [f for flux in fluxes_total_old for f in flux]
         df1 = pd.DataFrame(fluxes_total_old)#{'dates': times_total_new})#,'fluxes': fluxes_total_new, 'flags': flags_total_new})
@@ -323,12 +352,16 @@ def stitchTogether(p, startdate, starttime, enddate, endtime, calibrated=True):
             
 # fluxes = stitchTogether(dt.datetime(2021,7,3), "1418", dt.datetime(2021,7,3), "1434")
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2023,1,5), "2359") #endgoal
-fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata",dt.datetime(2016,11,4), "1800", dt.datetime(2023,1,5), "2359", False)
+
+
+# fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", True)
+
+
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2010,3,31), "0050")
 # fluxes = stitchTogether(dt.datetime(2017,9,10), "1605", dt.datetime(2017,9,10), "1607")
 # fluxes = stitchTogether(dt.datetime(2017,9,25), "0757", dt.datetime(2017,9,25), "0808")
 
-print(len(fluxes))
+# print(len(fluxes))
 
 # def convertFluxes(fluxes): # x = s*((detected-bkg)*gain/conversion_factor) # maybe not necessary
 #     return True

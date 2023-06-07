@@ -233,13 +233,13 @@ def makeNewData(p):
 
     import pickle
 
-    data = {'XRS': xrs}#, 'TIMES': times, 'FLAGS': flags}
+    data = {'XRS': finalxrs}#, 'TIMES': times, 'FLAGS': flags}
 
     # Store data (serialize)
     with open(f'{p}/new1mindata.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-makeNewData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# makeNewData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
 
 
 
@@ -309,7 +309,7 @@ def makeOldData(p):
     with open(f'{p}/old1mindata.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-makeOldData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# makeOldData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
     #     xrs.append(pd.DataFrame(xrsb_flux, times))
 # ff = nc.Dataset(dir0 + file0)
 # from ncflag import FlagWrap
