@@ -209,26 +209,26 @@ def getFluxGraphs(fluxes, length1, length2, starthr, scale):
 
  
 def stitchTogether(p, calibrated=True):
-    y1 = startdate.year
-    m1 = startdate.month
-    d1 = startdate.day
+#     y1 = startdate.year
+#     m1 = startdate.month
+#     d1 = startdate.day
     
-    y2 = enddate.year
-    m2 = enddate.month
-    d2 = enddate.day
+#     y2 = enddate.year
+#     m2 = enddate.month
+#     d2 = enddate.day
     
-    start = dt.datetime(y1, m1, d1, int(starttime[0:2]), int(starttime[2:4]))
-    end = dt.datetime(y2, m2, d2, int(endtime[0:2]), int(endtime[2:4]))
+    # start = dt.datetime(y1, m1, d1, int(starttime[0:2]), int(starttime[2:4]))
+    # end = dt.datetime(y2, m2, d2, int(endtime[0:2]), int(endtime[2:4]))
     
     # satellites = getSatellites(start) # this should return a 2D list: [[start, end, satellite], [start, end, satellite]] 
     
-    delta = end-start
+    # delta = end-start
     fluxes_new = []
     
     # goestypes = getSatellites(start)
     
-    day1 = start
-    day2 = end
+    # day1 = start
+    # day2 = end
     
     allBestSats = {}
     

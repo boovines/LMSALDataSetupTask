@@ -120,7 +120,7 @@ def getData(x, calibrated):
 
 
 # goestype = number, 
-def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)):
+def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)): 
     
     bestfluxes = []
     besttimes = []
@@ -143,8 +143,8 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
             xrs.append(data["XRS"][int(goestypes[i])-13])
             # times.append(data["TIMES"][int(goestypes[i])-13])
             # flags.append(data["FLAGS"][int(goestypes[i])-13])
-
-    
+    xrsdict = [onexrs.to_dict() for onexrs in xrs]
+    print(xrsdict)
     
 
     delta = dt.timedelta(minutes=1)
@@ -162,7 +162,10 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
         for j in range(len(goestypes)):
             # print(xrs[0].loc[[date1]][0][0],xrs[1].loc[[date1]][0][0], date1)
             try:
-                if not np.isnan(xrs[j].loc[[date1]][0][0]): # MAKE SURE THIS IS THE FLAG THROUGHOUT ALL TYPES
+                # print(type(xrs[j].index[0]))
+                flux = xrsdict[j][0][pd.Timestamp(date1)]
+                print(goestypes[j], flux)#, xrs[j]._get_value(date1, 0, takeable=False) )#xrsdict[datetime.timestamp(date1)])#xrs[j].loc[[date1]][0][0])Timestamp('2010-01-01 00:00:00'): 7.79309843323972e-0
+                if not np.isnan(flux):#xrs[j].loc[[date1]][0][0]): # MAKE SURE THIS IS THE FLAG THROUGHOUT ALL TYPES
                     whichgoes = j
                     # if count==1:
                     #     print(count)
@@ -354,7 +357,7 @@ def stitchTogether(p, calibrated=True):
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2023,1,5), "2359") #endgoal
 
 
-# fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", True)
+fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest", True)
 
 
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2010,3,31), "0050")
