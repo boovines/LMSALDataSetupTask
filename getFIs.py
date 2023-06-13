@@ -53,7 +53,7 @@ def getData(p):
 
 
 def getTFIs(version):
-    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")
     tfilist = []
     lis = []
     arnums = []
@@ -116,7 +116,7 @@ def getTop10(fis):
 
 
 def appendData():
-    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+    data = getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")
     # get tfis and dfis and top 10s
     # reformat ar assigned list
 # appendData()

@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import requests
+import time
 import pickle
 num_vars = 2
 make_plot = 1
@@ -63,7 +64,7 @@ def getIndex(arr, low, high, x):
         # Element is not present in the array
         return -1  
 
-def getData(x, calibrated):
+def getData(x, calibrated, xrs):
     if calibrated:
         if(x==0):
             return dt.datetime(2010,1,1,0,0,0), dt.datetime(2010,10,28,0,0,0), ["14", "15"] # not sure about 13
@@ -98,7 +99,9 @@ def getData(x, calibrated):
         elif(x==15):
             return dt.datetime(2017,8,23,21,20,0), dt.datetime(2017,12,12,16,30,0), ["16", "15", "14"]
         else:
-            return dt.datetime(2017,12,12,16,30,0), dt.datetime.today(), ["17", "16", "15", "14"]
+            # print(dt.datetime(2017,12,12,16,30,0), xrs["XRS"][1].iloc[-1].name.to_pydatetime())
+            # time.sleep(10)
+            return dt.datetime(2017,12,12,16,30,0), xrs["XRS"][3].iloc[-1].name.to_pydatetime(), ["17", "16", "15", "14"]
     else:
         return dt.datetime(2010,1,1,0,0,0), dt.datetime(2020,3,4,23,59,0), ["15", "14", "13"]
     
@@ -120,31 +123,13 @@ def getData(x, calibrated):
 
 
 # goestype = number, 
-def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)): 
+def getRawFluxes(p, xrsdict, goestypes, calibrated, startdate, enddate = dt.datetime(2000, 1, 1, 0, 0)): 
     
     bestfluxes = []
     besttimes = []
     bestflags = []
 
-    route = f'{p}/new1mindata.pickle' if calibrated else f'{p}/old1mindata.pickle'
     
-
-    xrs = []
-    times = []
-    flags = []
-    # data = []
-    print("here")
-    with open(route, 'rb') as handle:
-        # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
-        data = pickle.load(handle)
-
-        # get the specific goestypes' data in the order specified by the goestype parameter
-        for i in range(len(goestypes)): 
-            xrs.append(data["XRS"][int(goestypes[i])-13])
-            # times.append(data["TIMES"][int(goestypes[i])-13])
-            # flags.append(data["FLAGS"][int(goestypes[i])-13])
-    xrsdict = [onexrs.to_dict() for onexrs in xrs]
-    print(xrsdict)
     
 
     delta = dt.timedelta(minutes=1)
@@ -164,7 +149,7 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
             try:
                 # print(type(xrs[j].index[0]))
                 flux = xrsdict[j][0][pd.Timestamp(date1)]
-                print(goestypes[j], flux)#, xrs[j]._get_value(date1, 0, takeable=False) )#xrsdict[datetime.timestamp(date1)])#xrs[j].loc[[date1]][0][0])Timestamp('2010-01-01 00:00:00'): 7.79309843323972e-0
+                # print(goestypes[j], flux)#, xrs[j]._get_value(date1, 0, takeable=False) )#xrsdict[datetime.timestamp(date1)])#xrs[j].loc[[date1]][0][0])Timestamp('2010-01-01 00:00:00'): 7.79309843323972e-0
                 if not np.isnan(flux):#xrs[j].loc[[date1]][0][0]): # MAKE SURE THIS IS THE FLAG THROUGHOUT ALL TYPES
                     whichgoes = j
                     # if count==1:
@@ -179,8 +164,9 @@ def getRawFluxes(p, goestypes, calibrated, startdate, enddate = dt.datetime(2000
             bestfluxes.append({"DATE": date1, "FLUX": np.nan, "GOES": np.nan})
             # print(date1, xrs[0].loc[[date1]][0][0], xrs[1].loc[[date1]][0][0])
             countnans+=1
-        else:    
-            bestfluxes.append({"DATE": date1, "FLUX": xrs[whichgoes].loc[[date1]][0][0], "GOES": goestypes[whichgoes]})
+        else:
+            print(flux)
+            bestfluxes.append({"DATE": date1, "FLUX": flux, "GOES": goestypes[whichgoes]})#xrs[whichgoes].loc[[date1]][0][0]
 
         date1 += delta
       
@@ -209,7 +195,6 @@ def getFluxGraphs(fluxes, length1, length2, starthr, scale):
 
     
 # print(fluxes_new)
-
  
 def stitchTogether(p, calibrated=True):
 #     y1 = startdate.year
@@ -243,13 +228,39 @@ def stitchTogether(p, calibrated=True):
     times_total_old = []
     flags_total_old = []
     
+    route = f'{p}/new1mindata.pickle' if calibrated else f'{p}/old1mindata.pickle'
+    
+
+    xrs = []
+    times = []
+    flags = []
+    # data = []
+    print("here")
+    with open(route, 'rb') as handle:
+        # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
+        rawxrsdata = pickle.load(handle)
+        print(rawxrsdata)
+    xrsdict = [onexrs.to_dict() for onexrs in rawxrsdata["XRS"]]
+    print("DONE DOWNLOADING XRS DICTS")
+
+        # get the specific goestypes' data in the order specified by the goestype parameter
+        
+    
     ftype = "newfluxes.pkl" if calibrated else "oldfluxes.pkl"
     if not os.path.exists(f"{p}/{ftype}"):
 
         r = 17 if calibrated else 1
         for i in range(r):
-            startdate, enddate, goestypes = getData(i, calibrated)
-            fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
+            startdate, enddate, goestypes = getData(i, calibrated, rawxrsdata)
+            print(startdate, enddate)
+            xrsdata = []
+            for i in range(len(goestypes)): 
+                xrsdata.append(xrsdict[int(goestypes[i])-13])
+                # times.append(data["TIMES"][int(goestypes[i])-13])
+                # flags.append(data["FLAGS"][int(goestypes[i])-13])
+            
+            
+            fluxes, nancount = getRawFluxes(p, xrsdata, goestypes, calibrated, startdate, enddate)
             fluxes_total_new.append(fluxes) if calibrated else fluxes_total_old.append(fluxes)
             # times_total_new.append(times)
             # flags_total_new.append(flags)
@@ -266,12 +277,16 @@ def stitchTogether(p, calibrated=True):
                 # fluxes_total_new.append(d)
                 print(fluxes_total_new)
             # print(data, data1)
-            startdate, enddate, goestypes = getData(100, calibrated)
+            startdate, enddate, goestypes = getData(100, calibrated, rawxrsdata)
             # print(data["DATE"])
             startdate = data["DATE"].iloc[-1]+dt.timedelta(minutes=1)
-            enddate = dt.datetime(dt.datetime.today().year,dt.datetime.today().month, dt.datetime.today().day) -dt.timedelta(days=2)
+            enddate = dt.datetime(dt.datetime.today().year,dt.datetime.today().month, dt.datetime.today().day) -dt.timedelta(days=2)-dt.timedelta(minutes=1)
             print(startdate, enddate)
-            fluxes, nancount = getRawFluxes(p, goestypes, calibrated, startdate, enddate)
+            
+            xrsdata = []
+            for i in range(len(goestypes)): 
+                xrsdata.append(xrsdict[int(goestypes[i])-13])
+            fluxes, nancount = getRawFluxes(p, xrsdata, goestypes, calibrated, startdate, enddate)
             fluxes_total_new.append(fluxes) 
         print(fluxes_total_new)
     # for i in range(17):
@@ -357,7 +372,7 @@ def stitchTogether(p, calibrated=True):
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2023,1,5), "2359") #endgoal
 
 
-fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest", True)
+# fluxes = stitchTogether("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest", True)
 
 
 # fluxes = stitchTogether(dt.datetime(2010,3,31), "0000", dt.datetime(2010,3,31), "0050")

@@ -35,7 +35,7 @@ def getData(p):
     oldFluxData = 0
     
     # direc = "/Users/jhou/LMSALDataSetupTaskOriginal/testdata/" if lmsal else "Users/justinhou/Documents/data/"
-    with open(f'{p}/mergedevs524.csv') as f:
+    with open(f'{p}/mergedevs.csv') as f:
         evData = pd.read_csv(f)#csv.reader(f)
     
     
@@ -51,7 +51,7 @@ def getData(p):
         # for i in range(100):
         #     print(data[i])
         
-    route = f'{p}/tempoldfluxes.pkl'
+    route = f'{p}/oldfluxes.pkl'
     with open(route, 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         oldFluxData = pickle.load(handle)
@@ -90,7 +90,7 @@ def appendData(p):
     classes = {1: "X", 2: "X", 3: "X", 4:"X", 5: "M", 6:"C", 7: "B", 8: "A", 9: "A", 10: "A", 11: "A"}
     count = 0
     count2 = 0
-    if not os.path.exists(f"{p}/newmergedevstest3.csv"):
+    if not os.path.exists(f"{p}/newmergedevs.csv"):
         for i in range(len(evData["DATE"])):
             # print(evData["DATE"][i])
             # y1 = int(evData["DATE"][i][0:4])
@@ -134,8 +134,11 @@ def appendData(p):
                         newEventFluxes.append(np.nan)
                 else:
                     # try:
-                    print("here", d)
-                    newFlux = float(newFluxData[newFluxData['DATE'] == d]["FLUX"])
+                    print("here", d, newFluxData[newFluxData['DATE'] == d]["FLUX"])
+                    try:
+                        newFlux = float(newFluxData[newFluxData['DATE'] == d]["FLUX"])
+                    except:
+                        newFlux = np.nan
                     oldEventFluxes.append(np.nan)
                     newEventFluxes.append(newFlux)
                         # try:
@@ -158,7 +161,7 @@ def appendData(p):
                 newEventFluxes.append(np.nan)
         print(count,count2)
     else:
-        with open(f'{p}/newmergedevstest3.csv') as f:
+        with open(f'{p}/newmergedevs.csv') as f:
             evData = pd.read_csv(f)#csv.reader(f)
             oldEventFluxes = evData["OLD_CALIB_FLUX"]
             newEventFluxes = evData["NEW_CALIB_FLUX"]
@@ -211,4 +214,4 @@ def appendData(p):
     
     evData.to_csv(f"{p}/newmergedevs.csv")
         
-# appendData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+appendData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")

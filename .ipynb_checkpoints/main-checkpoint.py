@@ -3,12 +3,13 @@ import saveSRS2
 import getEvents
 import get1mindata
 import parsecheck3
-import newparsemindata2
+import newparsemindata3
 import appendNewFluxes2
 import groupARandEventFinal
-import getFIs
 import time
 
+
+    
 def main(path):
     # getData.getAll(path)
     # time.sleep(20)
@@ -29,9 +30,9 @@ def main(path):
     
     time.sleep(10)
     # stitchTogether(startdate, starttime, enddate, endtime, calibrated=True)
-    newfluxes = newparsemindata2.stitchTogether(path, True)
+    newfluxes = newparsemindata3.stitchTogether(path, True)
     time.sleep(10)
-    oldfluxes = newparsemindata2.stitchTogether(path, False)
+    oldfluxes = newparsemindata3.stitchTogether(path, False)
     print("FINISHED FINAL XRS LISTS")
     time.sleep(10)
     
@@ -39,11 +40,12 @@ def main(path):
     print("FINISHED FINAL EVENT LISTS")
     time.sleep(10)
     # groupARandEventFinal
-    groupARandEventFinal.compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "HER")
+    groupARandEventFinal.compileEvents(path, "HER")
     print("FINISHED FLARE ASSIGNMENT")
     time.sleep(10)
+    import getFIs
     tfilist = getFIs.getTFIs("NEW")
     top10TFIs = getFIs.getTop10(tfilist)
     print("FINISHED TFI PRODUCTS")
     return top10TFIs
-print(main("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest"))
+print(main("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612"))

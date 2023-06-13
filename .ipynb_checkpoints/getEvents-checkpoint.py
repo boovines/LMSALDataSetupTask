@@ -310,11 +310,11 @@ def makeFinalList(p, splitByYear=False, year=''):
         
         snoaa = sortList(noaa)
         noaaDF = getDFs(snoaa)
-        noaaDF.to_csv(f"{p}/noaaevs{str(dt.date.today())}.csv")
+        noaaDF.to_csv(f"{p}/noaaevs.csv")#{str(dt.date.today())}
         
         sher = sortList(her)
         herDF = getDFs(sher)
-        herDF.to_csv(f"{p}/herevs{str(dt.date.today())}.csv")
+        herDF.to_csv(f"{p}/herevs.csv")#{str(dt.date.today())}
         twolistsmerged = mergeLists(noaa, her)
         
         # newlist = mergeLists(twolistsmerged, reports[2])
@@ -323,7 +323,7 @@ def makeFinalList(p, splitByYear=False, year=''):
 
         # noaaDF.to_csv("noaaevs0519.csv")
         # herDF.to_csv("herevs0519.csv")
-        mergedDF.to_csv(f"{p}/mergedevs{str(dt.date.today())}.csv")
+        mergedDF.to_csv(f"{p}/mergedevs.csv")#{str(dt.date.today())}
         
         return noaa, her, twolistsmerged #newlist
         

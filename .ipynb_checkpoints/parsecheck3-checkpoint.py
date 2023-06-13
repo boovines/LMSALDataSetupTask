@@ -239,7 +239,7 @@ def makeNewData(p):
     with open(f'{p}/new1mindata.pickle', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-# makeNewData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# makeNewData("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest")
 
 
 

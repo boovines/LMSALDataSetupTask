@@ -303,7 +303,7 @@ def findMatches(ar, allevs, loctype): # use bottomleft topright to create array 
 
 def saveFile(d1, p):
     import pickle
-    with open(f'{p}/AREventAssignment2.pickle', 'wb') as handle:
+    with open(f'{p}/AREventAssignment.pickle', 'wb') as handle:
         pickle.dump(d1, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
 def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate = dt.datetime.today()):

@@ -63,6 +63,7 @@ def getLatest(path, version): # check if already saved latest. else, get latest 
         os.remove(f'{path}/goes16onemin.nc')
     
     url16 = f"https://data.ngdc.noaa.gov/platforms/solar-space-observing-satellites/goes/goes16/l2/data/xrsf-l2-avg1m_science/sci_xrsf-l2-avg1m_g16_s20170207_e20{y}{m}{lastday}_v2-2-0.nc"
+    print(url16)
     r = requests.get(url16, allow_redirects = True)
     open(f'{path}/goes16onemin.nc', "wb").write(r.content)
 
@@ -86,7 +87,7 @@ def getLatest(path, version): # check if already saved latest. else, get latest 
     
     
 
-# getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "16")
+# getLatest("/Users/jhou/LMSALDataSetupTaskOriginal/newfoldertest", "16")
 sat_life = {
         "goes13": [dt.datetime(2013, 6, 1, 0, 0), dt.datetime(2017, 12, 31, 0, 0)], 
         "goes14": [dt.datetime(2009, 9, 1, 0, 0), dt.datetime(2020, 3, 31, 0, 0)], 
