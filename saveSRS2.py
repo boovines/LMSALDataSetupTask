@@ -48,7 +48,7 @@ def convertDate(date): # Convert String to datetime type
     dlist[1] = months[dlist[1]]
     dlist = [int(d) for d in dlist]
     
-    return dt.date(dlist[0], dlist[1], dlist[2])
+    return dt.datetime(dlist[0], dlist[1], dlist[2])
     
 # def sortList(l):
 #     return sorted(l, key=lambda x: convertDate(x[8]))
@@ -174,7 +174,7 @@ def getData(p):
     
     saveData(p, flattenedfinallist, "")
 
-# getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")
+# getData("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")
 
 
 

@@ -325,6 +325,8 @@ def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate =
         # print(srsbyAR[i][arnums[i]])
         mmsall = []
         for day in srsbyAR[i][arnums[i]]:
+            # print(day["DATE"], type(day["DATE"]), startdate)
+            # print(day["DATE"], type(day["DATE"]), enddate)
             if(day["DATE"]>=startdate and day["DATE"]<=enddate):
                 matchedEvs, mms = findMatches(day, mergedevs, loctype)
                 allMatchedEvs.append(matchedEvs)
@@ -398,7 +400,7 @@ def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate =
     
 #     saveFile(srsandevents)
 
-# compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata", "HER")
+compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612", "HER")
 
 
 
