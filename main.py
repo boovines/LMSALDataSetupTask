@@ -5,6 +5,7 @@ import get1mindata
 import parsecheck3
 import newparsemindata3
 import appendNewFluxes2
+# import groupARandEventFinal
 import groupARandEventFinal
 import time
 
@@ -16,9 +17,9 @@ def main(path):
     saveSRS2.getData(path)
     print("FINISHED SAVING SRS")
     time.sleep(10)
-    noaa, herr, merged = getEvents.makeFinalList(path)
+    # noaa, herr, merged = getEvents.makeFinalList(path)
     print("FINISHED SAVING EVENTS")
-    time.sleep(10)
+    # time.sleep(10)
     
     get1mindata.getLatest(path, "16")
     print("FINISHED GETTING XRS")
@@ -44,8 +45,8 @@ def main(path):
     print("FINISHED FLARE ASSIGNMENT")
     time.sleep(10)
     import getFIs
-    tfilist = getFIs.getTFIs("NEW")
-    top10TFIs = getFIs.getTop10(tfilist)
+    assignmentsFinal, sortedAssignmentsFinal = getFIs.injectFIassignments(path)
+    # top10TFIs = getFIs.getTop10(tfilist)
     print("FINISHED TFI PRODUCTS")
-    return top10TFIs
-print(main("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612"))
+    return sortedAssignmentsFinal
+print(main("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623"))

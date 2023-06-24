@@ -38,9 +38,15 @@ def getHEK(directory):
                         "event_endtime", "fl_goescls", "ar_noaanum"]
     new_table.write("october_M1_flares.csv", format="csv")
 
+def notSameDay(p, fn):
+    if os.path.exists(f"{p}/{fn}"):
+        return not dt.datetime.fromtimestamp(os.path.getmtime(f"{path}/noaaevs.csv")).replace(hour =0, minute=0,second=0,microsecond=0) == dt.datetime.now().replace(hour =0, minute=0,second=0,microsecond=0)
+    else:
+        return False
 
 def getAll(directory):
-    getFTPtar(2022, "SRS", directory) # write code to replace existing file if not downloaded within the same day prior
+    if notSameDay(directory, "ftp_download_SRS"):
+        getFTPtar(2023, "SRS", directory) # write code to replace existing file if not downloaded within the same day prior
 
     # getFTPtar(2022, "events", directory)
 

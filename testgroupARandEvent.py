@@ -39,6 +39,7 @@ from sunpy.coordinates import RotatedSunFrame
 
 import math
 import sunpy.data.sample
+import pickle
 # import datetime
 
 months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
@@ -53,8 +54,8 @@ def convertDate(date):
     return dt.date(dlist[0], dlist[1], dlist[2])
 
 #get data
-def getEvents(eventType):
-    with open(f'new{eventType}evs5.csv') as f:
+def getEvents(eventType, p):
+    with open(f'{p}/new{eventType}evs.csv') as f:
         csvcontent = pd.read_csv(f)#csv.reader(f)
         # rows = []
         # for row in csvcontent:
@@ -69,9 +70,9 @@ def getSRS():
             
         return data
 
-def getSRSbyAR():
+def getSRSbyAR(p):
     import pickle
-    with open("srsdata.pkl", 'rb') as handle:
+    with open(f"{p}/srsdata.pkl", 'rb') as handle:
         # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
         data = pickle.load(handle)
         arnums = []
@@ -82,10 +83,10 @@ def getSRSbyAR():
         return data, arnums
 
     
-def getData():
-    srsbyAR, arnums = getSRSbyAR()
+def getData(p):
+    srsbyAR, arnums = getSRSbyAR(p)
     # srs = getSRS()
-    mergedevs = getEvents("merged")
+    mergedevs = getEvents("merged", p)
     # herevs = getEvents("her")
     # noaaevs = getEvents("noaa")
     return arnums, srsbyAR, mergedevs#, herevs, noaaevs
@@ -122,7 +123,8 @@ def diffRot(point, starttime, duration):
     
     # hrs = duration*u.hour#(int(duration[0:2])+int(duration[2:4])/60)*u.hour
     if hrs == 0:
-        return point
+        print("failleledleld", point)
+        return np.nan, np.nan
     
     start_time = str(starttime)
     point = SkyCoord(long*u.deg, lat*u.deg, obstime = start_time, frame=HeliographicStonyhurst)
@@ -132,6 +134,7 @@ def diffRot(point, starttime, duration):
     # print(diffrot_point)
     transformed_diffrot_point = diffrot_point.transform_to(HeliographicStonyhurst)
     # print(transformed_diffrot_point)
+    print(transformed_diffrot_point.lon.degree, transformed_diffrot_point.lat.degree)
     return transformed_diffrot_point.lon.degree, transformed_diffrot_point.lat.degree
 
 
@@ -152,228 +155,175 @@ def inbounds(bl, tr, loc):
 
 import time
 
-def findMatches(ar, allevs): # use bottomleft topright to create array of ars that are valid, find ar that is closest to event region, if none, return none
-    loc = ar["LOCATION"]
+
+
+def findMatches(ar, allevs, loctype): # use bottomleft topright to create array of ars that are valid, find ar that is closest to event region, if none, return none
+    loc = ar[f"LOCATION"]
     date = ar["DATE"]
     matchedevs = []
     count = 0
     today = date #- dt.timedelta(days=1)
     tomorrow = date + dt.timedelta(days=2)
+    # print(date
     evsInRange = allevs.loc[allevs["PEAK"].between(str(today),str(tomorrow))]
     # print(evsInRange)
     evlist = []
-    diffrotlocs = []
+    mms = []
     for index, ev in evsInRange.iterrows():
         # evdate = ev["DATE"]
         
-        # evnum = int(ev["ARNUMBER"] % 10000) if (not np.isnan(ev["ARNUMBER"])) else 0 # do this if not new
+        evnum = int(ev["ARNUMBER"] % 10000) if (not np.isnan(ev["ARNUMBER"])) else 0 # do this if not new
         
-        if ev["ARNUMBER"] == ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
-            # print("found arnummmmmmmmmmmm")
-            duration = ev['PEAK']
-            duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
-            lon, lat = diffRot(loc, date, duration2)
-            diffrotlocs.append([lon[0], lat[0]])
-            matchedevs.append(ev)
-        else:
-            # print(evdate, date)
-            # if (evdate==date):
-            count+=1
-            evlist.append(ev)
-            # print("here2")
-            duration = ev['PEAK']
-            duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
-            # print(date, type(date), "hereherehere")
-            # print(duration, type(duration), loc, type(loc))
-            # try:
-            # print(duration)
-            lon, lat = diffRot(loc, date, duration2)
-            
-            print(lon,lat)
+        # if evnum == ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
+        #     print("found arnummmmmmmmmmmm")
+        #     matchedevs.append(ev)
+        #     # pass
+        # else:
+        #     # print("matching
+        #     # print(evdate, date)
+        #     # if (evdate==date):
+
+
+        count+=1
+        evlist.append(ev)
+        # print("here2")
+        duration = ev['PEAK']
+        duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
+        # print(date, type(date), "hereherehere")
+        # print(duration, type(duration), loc, type(loc))
+        # try:
+        # print(duration)
+        lon, lat = diffRot(loc, date, duration2)
+        print(lon,lat)
+        if not np.isnan(lon):
             bl, tr, c = findARregion(lon, lat)
             # print(evdate, str(date))
             # print(bl, tr, ev["LOCATION"])
-            if (type(ev["LOCATION"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
-                la = int(ev["LOCATION"][1:3]) if ev["LOCATION"][0] == "N" else int(ev["LOCATION"][1:3]) * -1
-                lo = int(ev["LOCATION"][4:6]) if ev["LOCATION"][3] == "W" else int(ev["LOCATION"][4:6]) * -1
-                print(bl, tr, la, lo, ev["LOCATION"])
-            
-            
-            if(inbounds(bl, tr, ev["LOCATION"])):
-                # print(str(evdate)[:-9], str(date))
-                
-                print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
-                # print(ev["LOCATION"])
-                matchedevs.append(ev)
-                diffrotlocs.append([lon[0], lat[0]])
+            if (type(ev[f"LOCATION_{loctype}"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
+                la = int(ev[f"LOCATION_{loctype}"][1:3]) if ev[f"LOCATION_{loctype}"][0] == "N" else int(ev[f"LOCATION_{loctype}"][1:3]) * -1
+                lo = int(ev[f"LOCATION_{loctype}"][4:6]) if ev[f"LOCATION_{loctype}"][3] == "W" else int(ev[f"LOCATION_{loctype}"][4:6]) * -1
+                print(bl, tr, la, lo, ev[f"LOCATION_{loctype}"])
+
+
+                if(inbounds(bl, tr, ev[f"LOCATION_{loctype}"])):
+                    # print(str(evdate)[:-9], str(date))
+
+                    print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+                    # print(ev["LOCATION"])
+                    matchedevs.append(ev)
+                    if evnum != ar['ARNUM']:# and (ev not in mms):
+                        # if ev in mms:
+                        #     pass
+                        # else:
+                        mms.append(ev) # FIX THIS AT SOME POINT USING EVENT INDICES
+            else:
+                if evnum == float(ar["ARNUM"]): # if !=, don't check arnum first, if ==, check arnum
+                    print("No LOCATION, only ARNUM available")
+                    matchedevs.append(ev)
         # except:
         #     pass
         
     # print(evlist, count)
-    return matchedevs, diffrotlocs
+    return matchedevs, mms
     
     # find the ar with smallest dist, return
 
-def saveFile(d1, name):
+def saveFile(d1, p):
     import pickle
-    with open(f'{name}.pickle', 'wb') as handle:
+    with open(f'{p}/AREventAssignment.pickle', 'wb') as handle:
         pickle.dump(d1, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+def compileEvents(p, loctype, startdate = dt.datetime(2010,1,1,0,0,0), enddate = dt.datetime.today()):
+    arnums, srsbyAR, mergedevs = getData(p)
+    srsandevents = []
+    srsandeventsbyAR = []
+    
+    matchedARs = []
+    
+    
+    
+    testsrs = []
+    numtests = 100
+    
+    newSRSbyAR = []
+    mismatches = [] # events that are incorrectly assigned
+    matchedevs = []
+    
+    if os.path.exists(f"{p}/matchedevs.pkl"):
+        # append past matched ev names to matched evs
+        with open(f"{p}/matchedevs.pkl", "rb") as f:
+            data = pickle.load(f)
+            matchedevs = data
+        
+    
+    # get list of events aside from the ones already assigned and put it through the for loop below
+    # with open(f'{p}/newmergedevs.csv') as f:
+    #     evsInRange = pd.read_csv(f)#csv.reader(f)
+    date = dt.datetime.now()
+    weekago = date - dt.timedelta(days=7)
+    today = date
+        
+    needmatching = mergedevs.loc[mergedevs["PEAK"].between(str(weekago),str(today))]
+    print(needmatching)
+    for i in range(len(srsbyAR)):
+        allMatchedEvs = []
+        # print(srsbyAR[i][arnums[i]])
+        mmsall = []
+        for day in srsbyAR[i][arnums[i]]:
+            # print(day["DATE"], type(day["DATE"]), startdate)
+            # print(day["DATE"], type(day["DATE"]), enddate)
+            if(day["DATE"]>=startdate and day["DATE"]<=enddate):
+                matchedEvs, mms = findMatches(day, needmatching, loctype) # TEST: before is mergedevs changechangechangechangechangechange
+                allMatchedEvs.append(matchedEvs)
+                mmsall.append(mms)
+        mmsall = [item for sublist in mmsall for item in sublist]
+        mismatches.append([arnums[i], mmsall])
+        allMatchedEvs = [item for sublist in allMatchedEvs for item in sublist]
+        
+        newdict = srsbyAR[i]
+        newdict[f"{arnums[i]}_EVENTS"] = allMatchedEvs
+        
+        newSRSbyAR.append(newdict)
+    
+    # if AREventAssignment.pickle already exists use the newly assigned lists to append to currently existing list
+    if os.path.exists(f"{p}/AREventAssignment.pickle"):
+        with open(f'{p}/AREventAssignment.pickle', "rb") as f:
+            existingAssignments = pickle.load(f)
+        for i in range(len(existingAssignments)):
+            # tfi = 0
+            events = existingAssignments[i][f"{arnums[i]}_EVENTS"]
+            newevents = [events.append(ev) for ev in newSRSbyAR[i][f"{arnums[i]}_EVENTS"]]
+            existingAssignments[i][f"{arnums[i]}_EVENTS"] = newevents
+            
+        saveFile(existingAssignments, p)
+            
+    else:
+        saveFile(newSRSbyAR, p)
+    
+    bothcount = 0
+    for index, ev in mergedevs.iterrows(): 
+        if (not np.isnan(ev["ARNUMBER"])) and type(ev[f"LOCATION_{loctype}"]) == type("hi"):
+            bothcount+=1
+    
+    
+    falsecount = len([item for sublist in mismatches for item in sublist])
+    print(mismatches)
+    print(falsecount/bothcount)
 
-def removeDupsInside(newSRSbyAR, arnums):
-    for i in range(len(newSRSbyAR)):
-        l = newSRSbyAR[i][f"{arnums[i]}_EVENTS"]
-        
-        temp1 = []
-        
-        [temp1.append(x.name) for x in l] 
-        
-        temp2= []
-        [temp2.append(x) for x in temp1 if x not in temp2]
-        
-        temp3 = []
-        for x in temp2:
-            for v in l:
-                if v.name == x:
-                    temp3.append(v)
-                    break
-        # [temp3.append(x)  newSRSbyAR[i][f"{arnums[i]}_EVENTS"] if x not in temp] 
 
-        print(temp3)
-        newSRSbyAR[i][f"{arnums[i]}_EVENTS"] = temp3
-        
-        print(newSRSbyAR[i])
-        # nodups = list(dict.fromkeys(temp))#[*set(temp)]
-        # print(nodups[:2])
-    return newSRSbyAR
-        
-def deleteDups(newSRSbyAR, mergedevs, allDiffRots, arnums):
     
     # newsrsby ar get rid of repitition
     
-    
     # get arnum list and use that to loop through events
-    # {"[ARNUM]": ...,. "[ARNUM]_EVENTS": ... NEW_CALIB_FLUX, NEW}
     
-    evsbyAR = []
-    for i in range(len(newSRSbyAR)):
-        
-        allevs = [event for event in newSRSbyAR[i][f"{arnums[i]}_EVENTS"]]
-        evsbyAR.append({arnums[i]: allevs})
-    
-
-    # get all linear distances
-    distances = []
-    length = len(arnums)
-    for i in range(length):
-        dist = []
-        print(arnums[i])
-        # print(
-        # print(evsbyAR[i][arnums[i]])
-        # print(evsbyAR)
-        for j in range(len(allDiffRots[i][arnums[i]])):
-            ev = evsbyAR[i][arnums[i]][j]
-            print(evsbyAR[i])
-            print(allDiffRots[i])
-            # print(j, len(evsbyAR[i][arnums[i]]), evsbyAR[i][arnums[i]])
-            # print(allDiffRots[i][arnums[i]])
-            if len(allDiffRots[i][arnums[i]]) > 0:
-                la = int(ev["LOCATION"][1:3]) if ev["LOCATION"][0] == "N" else int(ev["LOCATION"][1:3]) * -1
-                lo = int(ev["LOCATION"][4:6]) if ev["LOCATION"][3] == "W" else int(ev["LOCATION"][4:6]) * -1
-
-                lon = allDiffRots[i][arnums[i]][j][0]
-                lat = allDiffRots[i][arnums[i]][j][1]
-
-                print(lat)
-                print(allDiffRots)
-                dist.append(math.sqrt((la-int(lat))**2+(lo-int(lon))**2))
-        distances.append({arnums[i]: dist})
-        
-    # get all xplicate indices i and j and their corresponding distances [[[i,j], dist], ...]
-    alldupevents = []
-    for index, ev in mergedevs.iterrows():
-        dupevents = []
-        for i in range(length):
-            
-            for j in range(len(distances[i][arnums[i]])):#len(evsbyAR[i][arnums[i]])):
-                if evsbyAR[i][arnums[i]][j].name == ev.name:
-                    print(distances, i, j, arnums[i])
-                    dupevents.append([[i,j], distances[i][arnums[i]][j]])
-        alldupevents.append(dupevents)
-    
-    # sort from least distance to greatest within each of these lists, then get rid of least distance one
-    from operator import itemgetter
-    sortedalldups = []
-    for dups in alldupevents:
-        sortedalldups.append(sorted(alldupevents, key=itemgetter(1)))
-        
-    # go back through the newSRSbyAR list and get rid of all ARs in that list
-    for d in sortedalldups:
-        for e in range(len(dups)):
-            e2 = e+1
-            dupedev = newSRSbyAR[e][f"{arnum[d[e2][0]]}_EVENTS"][d[e2][1]]
-            newSRSbyAR[e][f"{arnum[d[e2][0]]}_EVENTS"].remove(dupedev)
-    
-    return newSRSbyAR
-
-
-def compileEvents():
-    arnums, srsbyAR, mergedevs = getData()
-    
-    if not os.path.exists("AREventAssignment2.pickle"):
-        srsandevents = []
-        srsandeventsbyAR = []
-
-        matchedARs = []
-
-
-
-        testsrs = []
-        numtests = 100
-
-        newSRSbyAR = []
-
-        allDiffRots = []
-        for i in range(len(srsbyAR)):
-            allMatchedEvs = []
-            diffrots = []
-            # print(srsbyAR[i][arnums[i]])
-            for day in srsbyAR[i][arnums[i]]:
-                matchedEvs, diffrotlocs = findMatches(day, mergedevs)
-                allMatchedEvs.append(matchedEvs)
-                diffrots.append(diffrotlocs)
-            allMatchedEvs = [item for sublist in allMatchedEvs for item in sublist]
-            diffrots = [item for sublist in diffrots for item in sublist]
-
-            newdict = srsbyAR[i]
-            newdict[f"{arnums[i]}_EVENTS"] = allMatchedEvs
-
-            allDiffRots.append({arnums[i]: diffrots})
-            
-            newSRSbyAR.append(newdict)
-            print(allDiffRots)
-        saveFile(allDiffRots, "diffrots")
-    else:
-        import pickle
-        with open("AREventAssignment2.pickle", 'rb') as handle:
-            # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
-            newSRSbyAR = pickle.load(handle)
-        with open("diffrots.pickle", 'rb') as handle:
-            # {"XRS": [DF of goes13 data with date as index and flux, DF of goes14, ..., DF of GOES17], "TIMES": [...], "FLAGS": [...]}
-            allDiffRots = pickle.load(handle)
-    print("COMPLETED FIRST STEP, NOW CHECKING FOR DUPLICATES")
-    
-    # print(allDiffRots)
-    newSRSbyAR2 = removeDupsInside(newSRSbyAR, arnums)
-    
-    finalSRSbyAR = deleteDups(newSRSbyAR2, mergedevs, allDiffRots, arnums)
-
     # save the differentially rotated result
     # make 3xlen(assigned events) with each item [event_data, differentially_rotated, arnum]
     
     # if two event_datas match, evaluate the distance. whichever has the greater distance is added to the "remove list"
     
+    
      
-    saveFile(newSRSbyAR, "testAREventAssignment")
+    
     
 #     print(len(old_srs))
     
@@ -412,7 +362,7 @@ def compileEvents():
     
 #     saveFile(srsandevents)
 
-compileEvents()
+# compileEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata614", "HER")
 
 
 
@@ -452,3 +402,83 @@ def diffRot2(point, starttime, duration):
     w = (14.713 + -2.396*(math.sin(transformed.lat.degree)**2) + -1.787*(math.sin(transformed.lat.degree)**4)) * u.degree/u.day #2: get angular velocity at longitude (https://en.wikipedia.org/wiki/Solar_rotation)
     new = SkyCoord(transformed.lon.degree*u.degree + w*mins, transformed.lat.degree*u.degree, frame=sunpy.coordinates.HeliographicStonyhurst) #3: create new coordinate using w
     return new.lon.degree, new.lat.degree
+def arFilterFirst():
+    if evnum == ar["ARNUM"]: # if !=, check for arnum after diff rot if no other choice, if ==, check arnum
+        print("found arnummmmmmmmmmmm")
+        matchedevs.append(ev)
+        # pass
+    else:
+        # print("matching
+        # print(evdate, date)
+        # if (evdate==date):
+
+
+        count+=1
+        evlist.append(ev)
+        # print("here2")
+        duration = ev['PEAK']
+        duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
+        # print(date, type(date), "hereherehere")
+        # print(duration, type(duration), loc, type(loc))
+        # try:
+        # print(duration)
+        lon, lat = diffRot(loc, date, duration2)
+        print(lon,lat)
+        if not np.isnan(lon):
+            bl, tr, c = findARregion(lon, lat)
+            # print(evdate, str(date))
+            # print(bl, tr, ev["LOCATION"])
+            if (type(ev[f"LOCATION_{loctype}"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
+                la = int(ev[f"LOCATION_{loctype}"][1:3]) if ev[f"LOCATION_{loctype}"][0] == "N" else int(ev[f"LOCATION_{loctype}"][1:3]) * -1
+                lo = int(ev[f"LOCATION_{loctype}"][4:6]) if ev[f"LOCATION_{loctype}"][3] == "W" else int(ev[f"LOCATION_{loctype}"][4:6]) * -1
+                print(bl, tr, la, lo, ev[f"LOCATION_{loctype}"])
+
+
+                if(inbounds(bl, tr, ev[f"LOCATION_{loctype}"])):
+                    # print(str(evdate)[:-9], str(date))
+
+                    print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+                    # print(ev["LOCATION"])
+                    matchedevs.append(ev)
+                    if evnum != ar['ARNUM']:# and (ev not in mms):
+                        # if ev in mms:
+                        #     pass
+                        # else:
+                        mms.append(ev) # FIX THIS AT SOME POINT USING EVENT INDICES
+
+def locationFilterFirst():
+    count+=1
+    evlist.append(ev)
+    # print("here2")
+    duration = ev['PEAK']
+    duration2 = dt.datetime.strptime(duration, '%Y-%m-%d %H:%M:%S')
+    # print(date, type(date), "hereherehere")
+    # print(duration, type(duration), loc, type(loc))
+    # try:
+    # print(duration)
+    lon, lat = diffRot(loc, date, duration2)
+    print(lon,lat)
+    bl, tr, c = findARregion(lon, lat)
+    # print(evdate, str(date))
+    # print(bl, tr, ev["LOCATION"])
+    if (type(ev[f"LOCATION_{loctype}"]) == type("hi")): # and type(ev["LOCATION"]) == type("hi")
+        la = int(ev[f"LOCATION_{loctype}"][1:3]) if ev[f"LOCATION_{loctype}"][0] == "N" else int(ev[f"LOCATION_{loctype}"][1:3]) * -1
+        lo = int(ev[f"LOCATION_{loctype}"][4:6]) if ev[f"LOCATION_{loctype}"][3] == "W" else int(ev[f"LOCATION_{loctype}"][4:6]) * -1
+        print(bl, tr, la, lo, ev[f"LOCATION_{loctype}"])
+
+
+        if(inbounds(bl, tr, ev[f"LOCATION_{loctype}"])):
+            # print(str(evdate)[:-9], str(date))
+
+            print("ASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNEDASSIGNED")
+            # print(ev["LOCATION"])
+            matchedevs.append(ev)
+            if evnum != ar['ARNUM']:# and (ev not in mms):
+                # if ev in mms:
+                #     pass
+                # else:
+                mms.append(ev) # FIX THIS AT SOME POINT USING EVENT INDICES
+    else:
+        if evnum == ar["ARNUM"]: # if !=, don't check arnum first, if ==, check arnum
+            print("No LOCATION, only ARNUM available")
+            matchedevs.append(ev)

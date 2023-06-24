@@ -29,8 +29,9 @@ months = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 
 
 
 def parseEventData(directory, skippedLines): # parse text file
+    # print(directory)
     count = skippedLines
-    # if (reportName == ")
+    
     with open(directory) as fp3:
         data = []
         for line in fp3.readlines():
@@ -59,11 +60,14 @@ def getEventData(p, reportType, startyear=2010, endyear = dt.date.today().year):
 
             open(f"{p}/{reportType}/goes_xray_event_list_{i}.txt", 'wb').write(r.content)
     elif os.path.exists(f"{p}/{reportType}") and endyear == dt.date.today().year:
+        # try:
         os.remove(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt")
         url = f"{root}/goes_xray_event_list_{dt.date.today().year}.txt" 
         r = requests.get(url, allow_redirects=True)
 
         open(f"{p}/{reportType}/goes_xray_event_list_{dt.date.today().year}.txt", 'wb').write(r.content)
+        # except:
+        #     pass
     else:
         pass
     
@@ -75,6 +79,7 @@ def extractEventData(p, reportType, year, file, sanhome=False):
         skippedLines = 6 #if ('goes-xrs-reports' == reportType or 'goes-xrs-reports-HER' in reportType) else 0
         # print(file)
         directory = f'{p}/{reportType}/{file}'
+        
         data = parseEventData(directory, skippedLines)
         
     else:
@@ -105,17 +110,18 @@ def convertDatev2(date):
     year = int(times[2])
     month = int(months[times[1]])
     day = int(times[0])
-    return dt.date(year, month, day)
+    return dt.datetime(year, month, day)
 
 
 def organizeDatav2(listtype, data): # organize data downloaded from Kim's email
     newdata = []
     for record in data:
         event = {}
-        event["DATE"] = convertDatev2(record[0])
-        event["START"] = record[1][0:2]+record[1][3:5]
-        event["PEAK"] = record[2][0:2]+record[2][3:5]
-        event["END"] = record[3][0:2]+record[3][3:5]
+        date = convertDatev2(record[0])
+        event["DATE"] = date
+        event["START"] = dt.datetime(date.year, date.month, date.day, int(record[1][0:2]), int(record[1][3:5]))
+        event["PEAK"] = dt.datetime(date.year, date.month, date.day, int(record[2][0:2]), int(record[2][3:5]))#record[2][0:2]+record[2][3:5]
+        event["END"] = dt.datetime(date.year, date.month, date.day, int(record[3][0:2]), int(record[3][3:5]))#record[3][0:2]+record[3][3:5]
         # if listtype == 'goes-xrs-reports':
         #     event["MAGNITUDE_NOAA"] = record[4]
         # else:
@@ -127,13 +133,13 @@ def organizeDatav2(listtype, data): # organize data downloaded from Kim's email
         elif(len(record) == 6):
             if(record[5].isnumeric()):
                 # event["LOCATION"] = ""
-                event["ARNUMBER"] = record[5]
+                event["ARNUMBER"] = int(record[5])
             else:
                 # event["LOCATION"] = record[5]
                 event["ARNUMBER"] = ""
         elif(len(record) == 7):
             # event["LOCATION"] = record[5]
-            event["ARNUMBER"] = record[6]
+            event["ARNUMBER"] = int(record[6])
         else:
             pass
         
@@ -176,6 +182,7 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
     print(len(list2) + len(list2))
     for event1 in list1:
         match = False
+        # if list2
         for event2 in list2:
             # print(event1)
             # print(event2["MAGNITUDE_HER"][1:])
@@ -186,12 +193,14 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             # print(event2["MAGNITUDE_HER"][0])
             # print("hola", type(event2["MAGNITUDE_HER"][0]),event2["MAGNITUDE_HER"][0])
             
+            # print(type(event1["DATE"]), event2["DATE"])
+            
             mag1 = float(event1["MAGNITUDE_NOAA"][1:]) if event1["MAGNITUDE_NOAA"] != "" else 2100
             class1 = event1["MAGNITUDE_NOAA"][0] if event1["MAGNITUDE_NOAA"] != "" else 100 # maybe this is wrong? "MAGNITUDE"
             
             mag2 = float(event2["MAGNITUDE_HER"][1:]) if event2["MAGNITUDE_HER"] != "" else 2100
             class2 = event2["MAGNITUDE_HER"][0] if event2["MAGNITUDE_HER"] != "" else 2100 # maybe this is wrong?
-            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and class1==class2 and abs(mag1-mag2)<0.2):
+            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and class1==class2 and abs(mag1-mag2)<=0.2):
                 match = True
                 newevent = event1
 #                 # magnitudes = []
@@ -226,7 +235,8 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
         if not match:
             # print("type3")
             # print(event2)
-            newevent = event2
+            newevent = event1   
+            # print(newevent)
             # magnitudes1 = []
             # magnitudes1.append(event2["MAGNITUDE"])
             newevent["MAGNITUDE_NOAA"] = event1["MAGNITUDE_NOAA"] # SAME POTENTIAL ERROR HERE?
@@ -245,7 +255,7 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             mag2 = float(event2["MAGNITUDE_HER"][1:]) if event2["MAGNITUDE_HER"] != "" else 2100
             class2 = event2["MAGNITUDE_HER"][0] if event2["MAGNITUDE_HER"] != "" else 2100 # maybe this is wrong?
             
-            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and abs(mag1-mag2)<0.2):
+            if(event1["DATE"] == event2["DATE"] and event1["PEAK"] == event2["PEAK"] and abs(mag1-mag2)<=0.2):
                 match2 = True
                 break
         if not match2:
@@ -257,6 +267,7 @@ def mergeLists(list1, list2): # for each item in list 1, compare the DATE and th
             # magnitudes1.append(event1["MAGNITUDE_NOAA"])
             newevent["MAGNITUDE_HER"] = event2["MAGNITUDE_HER"]
             newevent["MAGNITUDE_NOAA"] = ""
+            newevent["LOCATION_NOAA"] = ""
             newlist.append(newevent) #4
     return newlist
 
@@ -264,10 +275,21 @@ def getDFs(evlist):
     dfs = []
     for ev in evlist:
         dfs.append(pd.DataFrame(ev, index = [0]))
-    return pd.concat(dfs)
+    DF = pd.concat(dfs)
+    
+    return DF.loc[:,~DF.columns.str.match("Unnamed")]
+
 
 def sortList(l):
-    return sorted(l, key=lambda x: x['DATE'])
+    return sorted(l, key=lambda x: x['PEAK'])
+
+def notSameDay(p, fn):
+    if os.path.exists(f"{p}/{fn}"):
+        return not dt.datetime.fromtimestamp(os.path.getmtime(f"{p}/{fn}")).replace(hour =0, minute=0,second=0,microsecond=0) == dt.datetime.now().replace(hour =0, minute=0,second=0,microsecond=0)
+    else:
+        return False
+
+
 
 def makeFinalList(p, splitByYear=False, year=''):
     
@@ -294,40 +316,113 @@ def makeFinalList(p, splitByYear=False, year=''):
             getEventData(p, reportTypes[i])
             report = []
             files = [item for item in os.listdir(path) if item[0:2]!="._"]
-            for file in files:
+            # print(files[len(files)-1:])
+            print(files)
+            # files = [item for item in files if not "2023" in item]
+            # print(files)
+            for file in files:#[:len(files)-1]:
                 # print([item for item in os.listdir(path) if item[0:2]!="._"])
-                temp1 = extractEventData(p, reportTypes[i], str(year), file)
-                temp2 = organizeDatav2(reportTypes[i], temp1)#organizeDatav1(temp1) if (i==0) else organizeData2(temp1)
-                
-                    
-                report.append(temp2)
+                if not ".ipynb_checkpoints" in file:
+                    temp1 = extractEventData(p, reportTypes[i], str(year), file)
+                    temp2 = organizeDatav2(reportTypes[i], temp1)#organizeDatav1(temp1) if (i==0) else organizeData2(temp1)
+
+
+                    report.append(temp2)
             reports.append(report)
         
         noaa = [item for years in reports[0] for item in years]
         her = [item for years in reports[1] for item in years]
-        print(noaa)
+        # print(noaa)
         print(len(noaa), len(her))
         
         snoaa = sortList(noaa)
         noaaDF = getDFs(snoaa)
-        noaaDF.to_csv(f"{p}/noaaevs.csv")#{str(dt.date.today())}
+        
         
         sher = sortList(her)
         herDF = getDFs(sher)
-        herDF.to_csv(f"{p}/herevs.csv")#{str(dt.date.today())}
-        twolistsmerged = mergeLists(noaa, her)
         
-        # newlist = mergeLists(twolistsmerged, reports[2])
-        smerged = sortList(twolistsmerged)
-        mergedDF = getDFs(smerged)
+        print(snoaa[0], sher[0])
+        
+        f1 = f"{p}/noaaevs.csv"
+        f2 = f"{p}/herevs.csv"
+        # print(noaa)
+        if os.path.exists(f1) and os.path.exists(f2): # TEST THIS PARTTTTTTTTT
+            if notSameDay(p, "mergedevs.csv"):
+                print("entered test part")
+                with open(f1, "rb") as f:
+                    oldnoaaevs = pd.read_csv(f)
+                    oldnoaalen = len(oldnoaaevs.index)
+                unmergednoaa = snoaa[oldnoaalen:]
 
-        # noaaDF.to_csv("noaaevs0519.csv")
-        # herDF.to_csv("herevs0519.csv")
-        mergedDF.to_csv(f"{p}/mergedevs.csv")#{str(dt.date.today())}
+                with open(f2, "rb") as f:
+                    oldherevs = pd.read_csv(f)
+                    oldherlen = len(oldherevs.index)
+                unmergedher = sher[oldherlen:]
+
+                # print(unmergednoaa, unmergedher)
+
+                # print(snoaa, noaaDF)
+
+
+
+                mergedend = mergeLists(unmergednoaa, unmergedher)
+
+                # print(mergedend)
+                # print(oldnoaaevs[-1:])
+
+                with open(f'{p}/mergedevs.csv', "rb") as f:
+                    oldmergedevs = pd.read_csv(f)
+                    twolistsmerged = oldmergedevs.to_dict("records")
+                    [entry.pop('Unnamed: 0') for entry in twolistsmerged]
+                    for i in range(len(twolistsmerged)):
+                        twolistsmerged[i]["DATE"] = dt.datetime.strptime(twolistsmerged[i]["DATE"], "%Y-%m-%d")
+                        print(type(twolistsmerged[i]["DATE"]))
+                    # print(twolistsmerged[:3], "hihihihihihihih")
+                # oldmergeddict.append(mergedend)
+                # print(oldmergeddict)
+                for event in mergedend:
+                    twolistsmerged.append(event)
+                # twolistsmerged = [item for sublist in oldmergeddict for item in sublist]
+                # print(twolistsmerged, "hi here2")
+
+                # print(len(twolistsmerged))
+
+                for ev in twolistsmerged:
+                    # print(ev)
+                    if type(ev["DATE"]) == type(dt.datetime(2010,1,1,0,0)):
+                        pass
+                    else:
+                        print(ev['DATE'])
+                # twolistsmerged = [oldmergeddict.append(ev) for ev in mergedend]
+
+                # print(twolistsmerged)
+
+
+
+                smerged = sortList(twolistsmerged)
+                mergedDF = getDFs(smerged)
+                noaaDF.to_csv(f"{p}/noaaevs.csv")#{str(dt.date.today())}
+                herDF.to_csv(f"{p}/herevs.csv")#{str(dt.date.today())}
+                mergedDF.to_csv(f"{p}/mergedevs.csv")#{str(dt.date.today())}
+            else:
+                return "","",""
+        else:
+            noaaDF.to_csv(f"{p}/noaaevs.csv")#{str(dt.date.today())}
+            herDF.to_csv(f"{p}/herevs.csv")#{str(dt.date.today())}
+
+            twolistsmerged = mergeLists(snoaa, sher)
+            # newlist = mergeLists(twolistsmerged, reports[2])
+            smerged = sortList(twolistsmerged)
+            mergedDF = getDFs(smerged)
+
+            # noaaDF.to_csv("noaaevs0519.csv")
+            # herDF.to_csv("herevs0519.csv")
+            mergedDF.to_csv(f"{p}/mergedevs.csv")#{str(dt.date.today())}
         
         return noaa, her, twolistsmerged #newlist
         
-# noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata")  
+# noaa, her, merged = makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata619")  
 # print(merged)
 
 # noaaline1 = pd.DataFrame(noaa[0])
