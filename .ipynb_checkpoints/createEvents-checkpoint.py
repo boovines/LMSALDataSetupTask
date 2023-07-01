@@ -5,6 +5,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 from astropy.io import fits
 import datetime as dt
 import os
+import pandas as pd
+
 def remTime(d):
     return dt.datetime(d.year, d.month, d.day)
 
@@ -52,16 +54,27 @@ def parseEventData(directory, skippedLines): # parse text file
                 count -= 1
         # print(data)
         return data
+def sortList(l):
+    return sorted(l, key=lambda x: x['PEAK'])
 
 def organizeDatav2(listtype, data): # organize data downloaded from Kim's email
     newdata = []
     for record in data:
         event = {}
-        date = convertDatev2(record[0])
+        date = dt.datetime.strptime(record[0], "%Y-%m-%d")
         event["DATE"] = date
         event["START"] = dt.datetime(date.year, date.month, date.day, int(record[1][0:2]), int(record[1][3:5]))
-        event["PEAK"] = dt.datetime(date.year, date.month, date.day, int(record[2][0:2]), int(record[2][3:5]))#record[2][0:2]+record[2][3:5]
-        event["END"] = dt.datetime(date.year, date.month, date.day, int(record[3][0:2]), int(record[3][3:5]))#record[3][0:2]+record[3][3:5]
+        
+        peak = dt.datetime(date.year, date.month, date.day, int(record[2][0:2]), int(record[2][3:5])) 
+        if int(record[1][0:2]) > int(record[2][0:2]):
+            peak += dt.timedelta(days=1)
+        event["PEAK"] = peak#record[2][0:2]+record[2][3:5]
+        
+        end = dt.datetime(date.year, date.month, date.day, int(record[3][0:2]), int(record[3][3:5]))
+        if int(record[2][0:2]) > int(record[3][0:2]):
+            end += dt.timedelta(days=1)
+        # if int(record[2][0:2]) < int(record[3][0:2]) else dt.datetime(date.year, date.month, date.day+1, int(record[2][0:2]), int(record[2][3:5])) 
+        event["END"] = end#record[3][0:2]+record[3][3:5]
         # if listtype == 'goes-xrs-reports':
         #     event["MAGNITUDE_NOAA"] = record[4]
         # else:
@@ -112,51 +125,47 @@ def organizeDatav2(listtype, data): # organize data downloaded from Kim's email
         
         newdata.append(event)
     return newdata
+
+def getDFs(evlist):
+    dfs = []
+    for ev in evlist:
+        dfs.append(pd.DataFrame(ev, index = [0]))
+    DF = pd.concat(dfs)
     
+    return DF.loc[:,~DF.columns.str.match("Unnamed")]
+
 def makeFinalList(p, year=''):
-    
-    for
-    
-    reportTypes = ['goes-xrs-reports', 'goes-xrs-reports-HER']#['old-goes-xrs-reports', 'goes-xrs-reports', 'goes-xrs-reports-HER']
-    reports = []
-    
-    
-    for i in range(len(reportTypes)):
-        path = f"{p}/{reportTypes[i]}" #f"/sanhome/jhou/{reportTypes[i]}"
-        getEventData(p, reportTypes[i])
-        report = []
-        files = [item for item in os.listdir(path) if item[0:2]!="._"]
-        # print(files[len(files)-1:])
-        print(files)
-        # files = [item for item in files if not "2023" in item]
-        # print(files)
-        for file in files:#[:len(files)-1]:
-            # print([item for item in os.listdir(path) if item[0:2]!="._"])
-            if not ".ipynb_checkpoints" in file:
-                temp1 = parseEventData(p, 6)
-                temp2 = organizeDatav2(reportTypes[i], temp1)#organizeDatav1(temp1) if (i==0) else organizeData2(temp1)
+    report = []
+    for year in range(2010, dt.datetime.now().year+1):
+        temp1 = parseEventData(f"{p}/event_text_files/{year}_events.txt", 6)
+        
+        temp2 = organizeDatav2('goes-xrs-reports-her', temp1)#organizeDatav1(temp1) if (i==0) else organizeData2(temp1)
 
 
-                report.append(temp2)
-        reports.append(report)
+        report.append(temp2)
+        # reports.append(report)
 
-    noaa = [item for years in reports[0] for item in years]
-    her = [item for years in reports[1] for item in years]
+    her = [item for years in report for item in years]
+    # her = [item for years in reports[1] for item in years]
     # print(noaa)
-    print(len(noaa), len(her))
+    print(len(her))
 
-    snoaa = sortList(noaa)
-
+    sher = sortList(her)
+    print(sher)
+    herDF = getDFs(sher)
+    print(herDF)
+    herDF.to_csv(f"{p}/mergedevs.csv")
+# makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623")
 
 
 def createEvents(path, event_type = "FL"):
-    if os.path.exists(f"{path}/event_text_files"):
-        currentyear = dt.datetime.now().year
-        for year in range(2010,currentyear+1):
+    currentyear = dt.datetime.now().year
+    for year in range(2010, currentyear+1):
+        if not os.path.exists(f"{path}/event_text_files/{year}_events.txt"):
             print("YEAR:", year)
             today = remTime(dt.datetime.now())
             tstart = f"{year}/1/1"
-            tend = f"{year}/{remTime(dt.datetime.now()).month}/{remTime(dt.datetime.now()).day}" if year==currentyear else f"{year}/12/31"
+            tend = f"{year}/{remTime(dt.datetime.now()).month}/{remTime(dt.datetime.now()).day}" if year==currentyear else f"{year+1}/1/1"
 
             filtered_results = getFido(tstart, tend, "GOES")
             other_results = getFido(tstart, tend, "SDO")
@@ -228,10 +237,13 @@ def createEvents(path, event_type = "FL"):
                 os.mkdir(f'{path}/{directory}')
             with open(f'{path}/{directory}/{year}_events.txt', 'w') as f:
                 f.write(file_content)
-    else:
+    
+    now = dt.datetime.now()
+    if dt.datetime.fromtimestamp(os.path.getmtime(f"{path}/event_text_files/{currentyear}_events.txt"))<dt.datetime(now.year, now.month, now.day, now.hour, 0):
         directory = "event_text_files"
         with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'r') as f:
             allevents = f.read()
+        with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'r') as f:
             latest = f.readlines()[-1]
         lsplit = [word for word in latest.split(" ") if word != ""]
         latestdate = dt.datetime.strptime(lsplit[0], "%Y-%m-%d")
@@ -241,6 +253,18 @@ def createEvents(path, event_type = "FL"):
         filtered_results = getFido(tstart, tend, "GOES")
         other_results = getFido(tstart, tend, "SDO")
         
+        date = dt.datetime.strptime(lsplit[0], "%Y-%m-%d")
+        laststart = dt.datetime(date.year, date.month, date.day, int(lsplit[1][0:2]), int(lsplit[1][3:5]))
+        
+        lastpeak = dt.datetime(date.year, date.month, date.day, int(lsplit[2][0:2]), int(lsplit[2][3:5])) 
+        if int(lsplit[1][0:2]) > int(lsplit[2][0:2]):
+            lastpeak += dt.timedelta(days=1)
+        
+        lastend = dt.datetime(date.year, date.month, date.day, int(lsplit[3][0:2]), int(lsplit[3][3:5]))
+        if int(lsplit[2][0:2]) > int(lsplit[3][0:2]):
+            lastend += dt.timedelta(days=1)
+        
+        priorev = "2010-12-29   21:04   21:10   21:15   B4.3   "
         for flare in filtered_results:
             s = dt.datetime.strptime(str(flare["event_starttime"])[:16], "%Y-%m-%d %H:%M")
             p = dt.datetime.strptime(str(flare["event_peaktime"])[:16], "%Y-%m-%d %H:%M")
@@ -250,66 +274,69 @@ def createEvents(path, event_type = "FL"):
             start = f"{str(s.hour).zfill(2)}:{str(s.minute).zfill(2)}"
             peak = f"{str(p.hour).zfill(2)}:{str(p.minute).zfill(2)}"
             end = f"{str(e.hour).zfill(2)}:{str(e.minute).zfill(2)}"
+            
+            
 
-            if start == lsplit[1] and peak == lsplit[2] and end == lsplit[3]:
+            if s <= laststart and p <= lastpeak and e <= lastend:
                 continue
             else:
                 
 
             
-            date = str(remTime(s))[:10]
-            arnum = ""
+                date = str(remTime(s))[:10]
+                arnum = ""
 
-            priorsplit = [word for word in priorev.split(" ") if word != ""]
-            print(priorsplit, date, start, peak, end)
-            # print(priorsplit, date, start, peak, end)
-            if priorsplit[0] == date and priorsplit[1] == start and priorsplit[2] == peak and priorsplit[3] == end:
-                print("inskip--------------------------------------------------------------", priorev)
-                continue
-            else:
-
-                if flare["noposition"]=="false":#flare["hgs_x"]!=0.0 and flare["hgs_y"]!=0.0:
-                    loc1 = f"   N"+str(int(flare["hgs_y"])).zfill(2) if flare["hgs_y"]>0 else f"   S"+str(-int(flare["hgs_y"])).zfill(2)
-                    loc2 = f"W"+str(int(flare["hgs_x"])).zfill(2) if flare["hgs_x"]>0 else f"E"+str(-int(flare["hgs_x"])).zfill(2)
+                priorsplit = [word for word in priorev.split(" ") if word != ""]
+                print(priorsplit, date, start, peak, end)
+                # print(priorsplit, date, start, peak, end)
+                if priorsplit[0] == date and priorsplit[1] == start and priorsplit[2] == peak and priorsplit[3] == end:
+                    print("inskip--------------------------------------------------------------", priorev)
+                    continue
                 else:
-                    loc1 = ""
-                    loc2 = ""
-                    s2s = other_results["event_starttime"]
-                    p2s = other_results["event_peaktime"]
-                    e2s = other_results["event_endtime"]
-                    z = 0
-                    for i in range(len(s2s)):
-                        s2 = dt.datetime.strptime(str(s2s[i])[:16], "%Y-%m-%d %H:%M")
-                        p2 = dt.datetime.strptime(str(p2s[i])[:16], "%Y-%m-%d %H:%M")
-                        e2 = dt.datetime.strptime(str(e2s[i])[:16], "%Y-%m-%d %H:%M")
-                        if s==s2 and p==p2 and e==e2:
-                            z = other_results[i]
-                            break
-                    if z != 0:
-                        loc1 = f"   N"+str(int(z["hgs_y"])).zfill(2) if z["hgs_y"]>0 else f"   S"+str(-int(z["hgs_y"])).zfill(2)
-                        loc2 = f"W"+str(int(z["hgs_x"])).zfill(2) if z["hgs_x"]>0 else f"E"+str(-int(z["hgs_x"])).zfill(2)
-                        arnum = z["ar_noaanum"] if z["ar_noaanum"]!=0 and type(z["ar_noaanum"])!=type(None) else ""
-                        print(loc1, loc2, arnum)
-                        if type(arnum) != type("hi"):
-                            print("here", arnum, type(arnum))
-                            arnum = arnum+10000 if arnum<10000 else arnum
 
-                mag = flare["fl_goescls"]
-                if type(arnum) == type("hi"):
-                    print("inarnum assignment")
-                    arnum = flare["ar_noaanum"] if flare["ar_noaanum"]!=0 else ""
-                    if type(arnum) != type("hi"):
-                        # print("here", arnum)
-                        arnum = arnum+10000 if arnum<10000 else arnum
-                print(arnum)
-                newstr = f"{date}   {start}   {peak}   {end}   {mag}{loc1}{loc2}   {arnum}"
-                allevents += f"\n{newstr}"
-                priorev = newstr
-                print(priorev)
-        with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'w') as f:
-            f.write(allevents)
+                    if flare["noposition"]=="false":#flare["hgs_x"]!=0.0 and flare["hgs_y"]!=0.0:
+                        loc1 = f"   N"+str(int(flare["hgs_y"])).zfill(2) if flare["hgs_y"]>0 else f"   S"+str(-int(flare["hgs_y"])).zfill(2)
+                        loc2 = f"W"+str(int(flare["hgs_x"])).zfill(2) if flare["hgs_x"]>0 else f"E"+str(-int(flare["hgs_x"])).zfill(2)
+                    else:
+                        loc1 = ""
+                        loc2 = ""
+                        s2s = other_results["event_starttime"]
+                        p2s = other_results["event_peaktime"]
+                        e2s = other_results["event_endtime"]
+                        z = 0
+                        for i in range(len(s2s)):
+                            s2 = dt.datetime.strptime(str(s2s[i])[:16], "%Y-%m-%d %H:%M")
+                            p2 = dt.datetime.strptime(str(p2s[i])[:16], "%Y-%m-%d %H:%M")
+                            e2 = dt.datetime.strptime(str(e2s[i])[:16], "%Y-%m-%d %H:%M")
+                            if s==s2 and p==p2 and e==e2:
+                                z = other_results[i]
+                                break
+                        if z != 0:
+                            loc1 = f"   N"+str(int(z["hgs_y"])).zfill(2) if z["hgs_y"]>0 else f"   S"+str(-int(z["hgs_y"])).zfill(2)
+                            loc2 = f"W"+str(int(z["hgs_x"])).zfill(2) if z["hgs_x"]>0 else f"E"+str(-int(z["hgs_x"])).zfill(2)
+                            arnum = z["ar_noaanum"] if z["ar_noaanum"]!=0 and type(z["ar_noaanum"])!=type(None) else ""
+                            print(loc1, loc2, arnum)
+                            if type(arnum) != type("hi"):
+                                print("here", arnum, type(arnum))
+                                arnum = arnum+10000 if arnum<10000 else arnum
+
+                    mag = flare["fl_goescls"]
+                    if type(arnum) == type("hi"):
+                        print("inarnum assignment")
+                        arnum = flare["ar_noaanum"] if flare["ar_noaanum"]!=0 else ""
+                        if type(arnum) != type("hi"):
+                            # print("here", arnum)
+                            arnum = arnum+10000 if arnum<10000 else arnum
+                    print(arnum)
+                    newstr = f"{date}   {start}   {peak}   {end}   {mag}{loc1}{loc2}   {arnum}"
+                    allevents += f"\n{newstr}"
+                    priorev = newstr
+                    print(priorev)
+            with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'w') as f:
+                f.write(allevents)
+    makeFinalList(path)
 
                                               
 
     
-createEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623")
+# createEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623")
