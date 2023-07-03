@@ -1,0 +1,9 @@
+GOES XRAY events for 2018 
+Written 2023-06-29 00:00:00, Justin Hou, justinhou2005@gmail.com 
+3 events were retrieved from the Heliophysics Event Registry (HER) 
+
+Columns:Date, Start, Peak, End Time, Class, Position (if available), Active Region (if available) 
+
+2018-12-20   00:01   00:12   00:21   A6.4   N12W18   
+2018-12-26   09:44   09:46   09:48   A2.1   S50E05   
+2018-12-29   13:16   13:17   13:18   A1.1   
