@@ -134,7 +134,7 @@ def getDFs(evlist):
     
     return DF.loc[:,~DF.columns.str.match("Unnamed")]
 
-def makeFinalList(p, year=''):
+def makeFinalList(p, folder, year=''):
     report = []
     for year in range(2010, dt.datetime.now().year+1):
         temp1 = parseEventData(f"{p}/event_text_files/{year}_events.txt", 6)
@@ -154,12 +154,14 @@ def makeFinalList(p, year=''):
     print(sher)
     herDF = getDFs(sher)
     print(herDF)
-    herDF.to_csv(f"{p}/mergedevs.csv")
+    herDF.to_csv(f"{p}/{folder}/mergedevs.csv")
 # makeFinalList("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623")
 
 
-def createEvents(path, event_type = "FL"):
+def createEvents(path, folder, event_type = "FL"):
     currentyear = dt.datetime.now().year
+    if not os.path.exists(f"{path}/event_text_files"):
+        os.mkdir(f"{path}/event_text_files")
     for year in range(2010, currentyear+1):
         if not os.path.exists(f"{path}/event_text_files/{year}_events.txt"):
             print("YEAR:", year)
@@ -240,6 +242,7 @@ def createEvents(path, event_type = "FL"):
     
     now = dt.datetime.now()
     if dt.datetime.fromtimestamp(os.path.getmtime(f"{path}/event_text_files/{currentyear}_events.txt"))<dt.datetime(now.year, now.month, now.day, now.hour, 0):
+        print("in update")
         directory = "event_text_files"
         with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'r') as f:
             allevents = f.read()
@@ -334,9 +337,9 @@ def createEvents(path, event_type = "FL"):
                     print(priorev)
             with open(f'{path}/{directory}/{dt.datetime.now().year}_events.txt', 'w') as f:
                 f.write(allevents)
-    makeFinalList(path)
+    makeFinalList(path, folder)
 
                                               
 
     
-# createEvents("/Users/jhou/LMSALDataSetupTaskOriginal/testdata623")
+# createEvents("/Users/jhou/LMSALDataSetupTaskOriginal", "testfinal")

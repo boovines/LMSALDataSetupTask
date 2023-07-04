@@ -56,7 +56,8 @@ def getLatest(path, version): # check if already saved latest. else, get latest 
         open(f'{path}/goes15onemin.nc', "wb").write(r.content)
 
 
-    lastday = "0"+str(int(date.strftime("%d"))-3) if ((int(date.strftime("%d"))-3)//10==0) else str(int(date.strftime("%d"))-3)
+    lastday = str((dt.datetime.now()-dt.timedelta(days=3)).day).zfill(2)
+    m = str((dt.datetime.now()-dt.timedelta(days=3)).month).zfill(2)
     print(lastday)
 
     if os.path.exists(f'{path}/goes16onemin.nc'):

@@ -11,7 +11,7 @@ from sunpy.physics.differential_rotation import diff_rot, solar_rotate_coordinat
 from sunpy.time import parse_time
 # import astropy.units as u
 
-from sunpy.coordinates import Helioprojective, HeliographicStonyhurst #USE STONYHURST solarmonitor.org SEND NABIL AN EMAIL ABT ERROR
+from sunpy.coordinates import Helioprojective, HeliographicStonyhurst #USE STONYHURST solarmonitor.org 
 # from astropy.coordinates import SkyCoord
 from sunpy.coordinates import RotatedSunFrame
 
@@ -22,6 +22,9 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 import drms
+
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 def set_proxy(proxy):
     import os
@@ -260,7 +263,16 @@ def downloadCEAFrames(date, time, location, intvl, times, mag, version = "fido")
 #cylindrical equal area (heliographic)
 # https://docs.sunpy.org/en/stable/generated/gallery/map_transformations/autoalign_aia_hmi.html?highlight=2d%20projection#auto-aligning-aia-and-hmi-data-during-plotting
 
+# from sunpy.net.jsoc.jsoc import drms
+# client = drms.Client()
+# import numpy
+# from datetime import date
+# d = date.today()
+# print(str(d.day).zfill(2))
+# # harp = client.query(f'hmi.sharp_720s[][2010.05.31_00:00_TAI-2010.06.03_00:00_TAI]', key = ['HARPNUM','T_REC','NOAA_ARS'])
 
+# harp = client.query(f'hmi.sharp_720s[][2010.05.01_00:00_TAI-{str(d.year).zfill(2)}.{str(d.month).zfill(2)}.{str(d.day).zfill(2)}_00:00_TAI]', key = ['HARPNUM','T_REC','NOAA_ARS'])
+# harp.to_csv("harpnums.csv")
 def aiaQuery():
     import drms
     jsoc = drms.Client()

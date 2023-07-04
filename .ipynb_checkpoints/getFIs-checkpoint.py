@@ -42,7 +42,7 @@ import sunpy.data.sample
 
 
 lis = []
-tfiscale = {"X": 10000, "M": 100000, "C": 1000000, "B": 10000000, "A": 100000000}
+tfiscale = {"X": 100, "M": 10, "C": 1, "B": .1, "A": .01}
 
 def getData(p):
     import pickle
@@ -86,25 +86,30 @@ def getTFIs(version, data, arnums): # return tfi and ar
         
     for i in range(len(data)):
         tfi = 0
-        # mags = [[ev[f"{version}_CALIB_FLUX"], ev["MAGNITUDE_NOAA"], ev["MAGNITUDE_HER"]] for ev in data[i][f"{arnums[i]}_EVENTS"]]
+        # num = i
+        mags = [[ev[f"{version}_CALIB_FLUX"], ev["MAGNITUDE_HER"]] for ev in data[i][f"{arnums[i]}_EVENTS"]]# , ev["MAGNITUDE_NOAA"]]
         # print(mags)
-        # # tfi = 0
-        # for mag in mags:
-        #     if not np.isnan(mag[0]):
-        #         tfi+=1000000*mag[0]
-        #     elif not np.isnan(mag[1]):
-        #         tfi+=tfiscale[mag[1][0]]*float(mag[1][1:])
-        #     elif not np.isnan(mag[2]):
-        #         tfi+=tfiscale[mag[2][0]]*float(mag[2][1:])
-        #     else:
-        #         pass
-        # print(arnums[0],tfi)
-        for event in data[i][f"{arnums[i]}_EVENTS"]:
-            # print(event["NEW_CALIB_MAG"])
-            if type(event[f"{version}_CALIB_MAG"]) == type("HI"):
-                # print(event[f"{version}_CALIB_MAG"], tfiscale[event[f"{version}_CALIB_MAG"][0]])
-                print(event[f"{version}_CALIB_MAG"], event[f"{version}_CALIB_FLUX"], event[f"{version}_CALIB_FLUX"]*tfiscale[event[f"{version}_CALIB_MAG"][0]], tfiscale[event[f"{version}_CALIB_MAG"][0]])
-                tfi+=event[f"{version}_CALIB_FLUX"]*tfiscale["C"]#event[f"{version}_CALIB_MAG"][0]]
+        tfi = 0
+        for mag in mags:
+            # print(type(mag[0]), mag[0], math.isnan(mag[0]))
+            if not math.isnan(mag[0]):
+                # print(mag[0]*5 == math.isnan(mag[0]))
+                tfi+=1000000*mag[0]
+            elif type(mag[1]) == type("HI"):
+                tfi+=tfiscale[mag[1][0]]*float(mag[1][1:])
+            elif type(mag[2]) == type("HI"):
+                tfi+=tfiscale[mag[2][0]]*float(mag[2][1:])
+            else:
+                pass
+        # tfis.append((arnums[num], tfi))
+        
+        # for event in data[i][f"{arnums[i]}_EVENTS"]:
+        #     # print(event["NEW_CALIB_MAG"])
+        #     if type(event[f"{version}_CALIB_MAG"]) == type("HI"):
+        #         # print(event[f"{version}_CALIB_MAG"], tfiscale[event[f"{version}_CALIB_MAG"][0]])
+        #         print(event[f"{version}_CALIB_MAG"], event[f"{version}_CALIB_FLUX"], event[f"{version}_CALIB_FLUX"]*tfiscale[event[f"{version}_CALIB_MAG"][0]], tfiscale[event[f"{version}_CALIB_MAG"][0]])
+        #         tfi+=event[f"{version}_CALIB_FLUX"]*tfiscale["C"]#event[f"{version}_CALIB_MAG"][0]]
+        
         data[i][f"TFI"] = tfi#{arnums[i]}_
         tfilist.append([arnums[i], tfi])
         lis.append(tfi)
@@ -192,7 +197,7 @@ def getDFIs(version, data, arnums):
             print(day[ardates[j]])
             # if len(day[ardates[j]])==0:
             for val in day[ardates[j]]:
-                dfi = dfi + val[f"{version}_CALIB_FLUX"]*tfiscale["C"]
+                dfi = dfi + val[f"{version}_CALIB_FLUX"]*1000000
             print("\n","asdklfj", day, day[ardates[j]], data[i][f"{arnums[i]}_EVENTS_BY_DAY"][j], "SDLFJLS") 
             data[i][f"{arnums[i]}_EVENTS_BY_DAY"][j]["DFI"] = dfi
     # print(data)
@@ -244,6 +249,6 @@ def injectFIassignments(p, version = "NEW"):
     #
     
     
-injectFIassignments("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")
+# injectFIassignments("/Users/jhou/LMSALDataSetupTaskOriginal/testdata612")
 
 

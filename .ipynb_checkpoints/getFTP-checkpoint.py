@@ -1,5 +1,7 @@
 import subprocess
 import tarfile
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 #event TFI stuff
 # full pipeline
 import os
@@ -11,9 +13,9 @@ def set_proxy(proxy):
     os.environ['HTTPS_PROXY'] = proxy
     os.environ['ftp_proxy'] = proxy
     os.environ['FTP_PROXY'] = proxy
+    os.environ['PARFIVE_TOTAL_TIMEOUT'] = '20.0'
 
-
-def getFTPtar(date, s, dir, tar=True):
+def getFTPtar(date, s, direc, tar=True):
     
 
     while True: #downloads and installs any missing packages
@@ -25,13 +27,13 @@ def getFTPtar(date, s, dir, tar=True):
             subprocess.call(["python", "-m", "pip", "install", "--trusted-host", "pypi.org", "--trusted-host", "files.pythonhosted.org", module])
     d = date #program will download all data created after this date to avoid having duplicates ex: 20220802 for Aug 2, 2022
     series = s #specify which data series to download from (events, GEOA, RSGA, SGAS, SRS)
-    wd = dir #specify working directory
+    wd = direc #specify working directory
     print('received')
 
     #cd
     os.chdir(wd)
 
-    # set_proxy("http://proxy-zsgov.external.lmco.com:80")
+    set_proxy("http://proxy-zsgov.external.lmco.com:80")
     #login to ftp server
     ftp = ftplib.FTP('ftp.swpc.noaa.gov')
     # print("here")
@@ -108,7 +110,7 @@ def getFTPtar(date, s, dir, tar=True):
 
         shutil.rmtree(folder) #remove all temporary files once zipped
     print(d)
-# getFTPtar(2022, "events", "/Users/justinhou/Documents/data")
+# getFTPtar(2022, "events", "/Users/jhou/LMSALDataSetupTaskOriginal/testdata")#/Users/justinhou/Documents/data")
 
 def extractFromTar(directory, series): # extract from tar
     if not os.path.exists(f"{directory}/ftp_download_{series}"):
